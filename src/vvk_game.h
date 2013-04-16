@@ -38,6 +38,8 @@ typedef struct Player {
   
 } Player;
 
+#include "vvk_graphics.h"
+
 int vvk_get_filesize(FILE* fp);
 int vvk_load_mapfile(const char* mapname, char** buf);
 int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root);

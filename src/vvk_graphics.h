@@ -7,6 +7,8 @@
 #include "SDL/SDL_ttf.h"
 #include "SDL/SDL_image.h"
 
+#include "vvk_game.h"
+
 void vvk_render_text_centered(SDL_Surface** target_surface, TTF_Font** font, const char text[],
                               SDL_Color text_color, int offset_x, int offset_y);
 void vvk_render_text_absolute(SDL_Surface** target_surface, TTF_Font** font, const char text[],
@@ -15,8 +17,6 @@ void vvk_render_box_centered(SDL_Surface** target_surface,
                              int offset_x, int offset_y, int width, int height);
 void vvk_render_box_absolute(SDL_Surface** target_surface,
                              int offset_x, int offset_y, int width, int height);
-int vvk_make_main_menu_surface(SDL_Surface** img_mmenu,
-                               TTF_Font** font20, TTF_Font** font15,
-                               const char VERSION[]);
-
+void vvk_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                       Cap** cap_root, Player** player_root);
 #endif

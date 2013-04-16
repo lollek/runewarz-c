@@ -1,5 +1,9 @@
 #include "vvk_game.h"
 
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define TILESIZE 15
+
 int vvk_get_filesize(FILE* fp) {
   int sz, prev;
 
@@ -13,11 +17,10 @@ int vvk_get_filesize(FILE* fp) {
 
 int vvk_load_mapfile(const char* mapname, char** buf) {
 
-  char minibuf[256], *p;
-
   FILE *fd = NULL;
   const char *prepath = "maps/";
   char *fullpath = malloc(strlen(mapname) + strlen(prepath) + 1);
+  char minibuf[256];
 
   /* Combine mapname + prepath into a path: */
   strcpy(fullpath, prepath);
@@ -40,29 +43,13 @@ int vvk_load_mapfile(const char* mapname, char** buf) {
 
   fclose(fd);
   free(fullpath);
-
-  /* Do some error checking to ensure if the file is OK:
-     Char 0-1 should be map x value (10-99)
-     Char 3-4 should be map y value (10-99)
-
-   */
-  p = buf[0];
-
-  if (('1' <= *p && *p <= '9') 
-      && ('0' <= *(p+1) && *(p+1) <= '9')
-      && ('1' <= *(p+3) && *(p+3) <= '9')
-      && ('0' <= *(p+4) && *(p+4) <= '9'))
-    return 0;
-
-  else {
-    fprintf(stderr, "Strange mapsize received. Exiting\n");
-    return 1;
-  }
+  
+  return 0;
 }
 
 int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
 
-  int x, y,  players = 0;
+  int x, y,  players = 2;
   char *p = NULL;
   Cap *cap_ptr = NULL, *cap_killer = NULL;
   Player *player_ptr = NULL, *player_killer = NULL;
@@ -88,7 +75,7 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
   (*player_root)->cap_list = NULL;
   player_ptr = player_root[0];
 
-  for(p = map_buffer[0], x = 0, y = -1; *p != '\0'  ; p++, x++) {
+  for(p = map_buffer[0], x = 0, y = 0; *p != '\0'  ; p++, x++) {
     if (*p == '\n') {
       y++;
       x = -1;
@@ -107,7 +94,7 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
       player_ptr = player_ptr->next;
       player_ptr->symbol = players++;
       player_ptr->color = 0;
-      if (players == 1)
+      if (players == 3)
         player_ptr->is_player = 1;
       else
         player_ptr->is_player = 0;
@@ -187,24 +174,10 @@ void vvk_free_map(Cap** cap_root, Player** player_root) {
 int vvk_play_game(SDL_Surface** stdscr, SDL_Surface** imgscr,
                   Cap** cap_root, Player** player_root) {
 
-  Cap *cap_ptr = cap_root[0];
-  Player *player_ptr = player_root[0];
-
-  SDL_Rect source, target;
-  source.w = 15; source.h = 15;
-  target.w = 15; target.h = 15;
-  
-  
-  while (cap_ptr != NULL) {
-    source.x = cap_ptr->color*15;
-    source.y = 0;
-    
-    target.x = cap_ptr->x*15;
-    target.y = cap_ptr->y*15;
-
-    SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
-    cap_ptr = cap_ptr->next;
-  }
+  vvk_draw_all_caps(stdscr, imgscr, cap_root, player_root);
   SDL_Flip(*stdscr);
+
+  
+  
   return 0;
 }

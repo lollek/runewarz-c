@@ -1,5 +1,9 @@
 #include "vvk_graphics.h"
 
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define TILESIZE 15
+
 void vvk_render_text_centered(SDL_Surface** target_surface, TTF_Font** font, const char text[],
                               SDL_Color text_color, int offset_x, int offset_y) {
   SDL_Surface *text_surf = NULL;
@@ -62,46 +66,46 @@ void vvk_render_box_absolute(SDL_Surface** target_surface,
   SDL_FreeSurface(temp_surf);
 }
 
-int vvk_make_main_menu_surface(SDL_Surface** img_mmenu,
-                               TTF_Font** font20, TTF_Font** font15,
-                               const char VERSION[]) {
+void vvk_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                       Cap** cap_root, Player** player_root) {
 
-  SDL_Surface *bg_img = NULL;
-  const SDL_Color color_red = { 123, 0, 0, 0 };
-  const SDL_Color color_red2 = { 80, 0, 0, 0 };
+  Cap *cap_ptr = cap_root[0];
+  Player *player_ptr = player_root[0];
+  CapList *cap_list_ptr = NULL;
 
+  SDL_Rect source, target;
+  source.w = TILESIZE; source.h = TILESIZE;
+  target.w = TILESIZE; target.h = TILESIZE;
+
+  /* Draw all free caps: */
+  while (cap_ptr != NULL) {
+    source.x = cap_ptr->color*TILESIZE;
+    source.y = 0;
     
-  /* Load Background Image:*/
-  bg_img = IMG_Load("img/BG_IMG2.png");
-  if (bg_img == NULL) {
-    fprintf(stderr, "Unable to load img/BG_IMG2.png\n");
-    return 1;
+    target.x = cap_ptr->x*TILESIZE;
+    target.y = cap_ptr->y*TILESIZE;
+
+    SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
+    cap_ptr = cap_ptr->next;
   }
 
-  /* Draw all the nicey text: */
-  /* 1. Title: */
-  vvk_render_text_centered(&bg_img, font20, "Ath Cliath", color_red, 0, -150);
-  
-  /* 2. Center Box: */
-  vvk_render_box_centered(&bg_img, 0, 0, 200, 200);
-  
-  vvk_render_text_centered(&bg_img, font15, "(N) New Game", color_red2, 0, -80);
-  vvk_render_text_centered(&bg_img, font15, "(L) Load Game", color_red2, 0, -50);
-  vvk_render_text_centered(&bg_img, font15, "(G) Graveyard", color_red2, 0, 0);
-  vvk_render_text_centered(&bg_img, font15, "(Q) Quit", color_red2, 0, 80);
+  /* Draw all free players: */
+  while (player_ptr != NULL) {
+    cap_list_ptr = player_ptr->cap_list;
+    
+    while (cap_list_ptr != NULL) {
+      source.x = player_ptr->color*TILESIZE;
+      source.y = player_ptr->symbol*TILESIZE;
 
-  /* 3. Bottom Box: */
-  vvk_render_box_centered(&bg_img, 0, 300, 200, 70);
+      target.x = cap_list_ptr->x*TILESIZE;
+      target.y = cap_list_ptr->y*TILESIZE;
 
-  vvk_render_text_centered(&bg_img, font15, VERSION, color_red2, 0, 280);
-  vvk_render_text_centered(&bg_img, font15, "A C Roguelike", color_red2, 0, 300);
-  vvk_render_text_centered(&bg_img, font15, "By Olle Kvarnstrom", color_red2, 0, 320);
+      SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
+      cap_list_ptr = cap_list_ptr->next;
+    }
+    player_ptr = player_ptr->next;
+  }
   
-  /* Optimise surface for quick blit: */
-  *img_mmenu = SDL_DisplayFormat(bg_img);
 
-  /* Clean up: */
-  SDL_FreeSurface(bg_img);
   
-  return 0;
 }

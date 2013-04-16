@@ -22,8 +22,6 @@
 #define TILESIZE 15
 
 #define CAPTION "RuneWarz v0.1"
-#define TITLE "RuneWarz"
-#define VERSION "v0.1"
 
 int init_graphics(SDL_Surface** stdscr, SDL_Surface** imgscr) {
   if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
@@ -63,11 +61,12 @@ int main(void) {
     return 1;
   
 
-  vvk_load_mapfile("map2_2", &map_buffer);
+  if (vvk_load_mapfile("map2_2", &map_buffer) == 1)
+    return 1;
   vvk_make_map(&map_buffer, &cap_root, &player_root);
 
   vvk_play_game(&stdscr, &imgscr, &cap_root, &player_root);
-  sleep(2);
+  sleep(10);
   
   
   vvk_free_map(&cap_root, &player_root);
