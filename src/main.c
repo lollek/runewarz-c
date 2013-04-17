@@ -24,6 +24,9 @@
 #define CAPTION "RuneWarz v0.1"
 
 int init_graphics(SDL_Surface** stdscr, SDL_Surface** imgscr) {
+
+  SDL_Surface *imgscr_temp;
+
   if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
     fprintf(stderr, "Failed to init sdl\n");
     return 1;
@@ -35,10 +38,15 @@ int init_graphics(SDL_Surface** stdscr, SDL_Surface** imgscr) {
     return 1;
     }
 
-  if ((*imgscr = IMG_Load("img/tiles.png")) == NULL) {
+  if ((imgscr_temp = IMG_Load("img/tiles.png")) == NULL) {
     fprintf(stderr, "Failed to load img/tiles.png\n");
     return 1;
   }
+  if ( (*imgscr = SDL_DisplayFormat(imgscr_temp)) == NULL) {
+    fprintf(stderr, "Failed to format img/tiles.png\n");
+    return 1;
+  }
+  SDL_FreeSurface(imgscr_temp);
 
   SDL_WM_SetCaption(CAPTION, CAPTION);
 
@@ -66,7 +74,6 @@ int main(void) {
   vvk_make_map(&map_buffer, &cap_root, &player_root);
 
   vvk_play_game(&stdscr, &imgscr, &cap_root, &player_root);
-  sleep(10);
   
   
   vvk_free_map(&cap_root, &player_root);

@@ -72,6 +72,7 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
   (*player_root)->symbol = -1;
   (*player_root)->color = -1;
   (*player_root)->is_player = -1;
+  (*player_root)->hover_color = -1;
   (*player_root)->cap_list = NULL;
   player_ptr = player_root[0];
 
@@ -98,6 +99,7 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
         player_ptr->is_player = 1;
       else
         player_ptr->is_player = 0;
+      player_ptr->hover_color = 0;
 
       player_ptr->cap_list = (CapList *)malloc(sizeof(CapList));
       player_ptr->cap_list->x = x;
@@ -116,6 +118,7 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
   player_ptr->symbol = player_killer->symbol;
   player_ptr->color = player_killer->color;
   player_ptr->is_player = player_killer->is_player;
+  player_ptr->hover_color = player_killer->hover_color;
   player_ptr->cap_list = player_killer->cap_list;
   player_ptr->next = player_killer->next;
 
@@ -174,10 +177,78 @@ void vvk_free_map(Cap** cap_root, Player** player_root) {
 int vvk_play_game(SDL_Surface** stdscr, SDL_Surface** imgscr,
                   Cap** cap_root, Player** player_root) {
 
+  SDL_Event event;
+  Player* player_ptr = NULL;
+  
   vvk_draw_all_caps(stdscr, imgscr, cap_root, player_root);
   SDL_Flip(*stdscr);
 
+  for (;;) {
+    for (player_ptr = player_root[0]; player_ptr != NULL; player_ptr = player_ptr->next) {
+      if (player_ptr->is_player)
+        switch (vvk_ingame_event(stdscr, imgscr, cap_root, player_root, &event)) {
+          case 1: SDL_Flip(*stdscr); break;
+          case -1: return 0; break;
+      }
+      else
+        vvk_ingame_ai_take_turn();
+    }
+  }
   
-  
+  return 0;
+}
+
+int vvk_ingame_event(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                     Cap** cap_root, Player** player_root, SDL_Event* event) {
+  while (SDL_WaitEvent(event)) {
+    if (event->type == SDL_KEYDOWN) {
+      switch (event->key.keysym.sym) {
+        case SDLK_1: {
+          (*player_root)->hover_color = 1;
+          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          return 1; break;
+        }
+        case SDLK_2: {
+          (*player_root)->hover_color = 2;
+          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          return 1; break;
+        }
+        case SDLK_3: {
+          (*player_root)->hover_color = 3;
+          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          return 1; break;
+        }
+        case SDLK_4: {
+          (*player_root)->hover_color = 4;
+          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          return 1; break;
+        }
+        case SDLK_5: {
+          (*player_root)->hover_color = 5;
+          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          return 1; break;
+        }
+        case SDLK_6: {
+          (*player_root)->hover_color = 6;
+          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          return 1; break;
+        }
+        case SDLK_0: {
+          vvk_draw_unhoover(stdscr, imgscr, cap_root, player_root);
+          (*player_root)->hover_color = 0;
+          return 1; break;
+        }
+        case SDLK_ESCAPE: return -1; break;
+        default: return 0; break;
+      }
+    }
+    else if (event->type == SDL_MOUSEMOTION) {}
+    else if (event->type == SDL_MOUSEBUTTONDOWN) {}
+    else return 0;
+  }
+  return 0;
+}
+
+int vvk_ingame_ai_take_turn() {
   return 0;
 }

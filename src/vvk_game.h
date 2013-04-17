@@ -32,6 +32,7 @@ typedef struct Player {
   int symbol;
   int color;
   int is_player;
+  int hover_color;
 
   struct CapList *cap_list;
   struct Player *next;
@@ -46,6 +47,8 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root);
 void vvk_free_map(Cap** cap_root, Player** player_root);
 int vvk_play_game(SDL_Surface** stdscr, SDL_Surface** imgscr,
                   Cap** cap_root, Player** player_root);
-
+int vvk_ingame_event(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                     Cap** cap_root, Player** player_root, SDL_Event* event);
+int vvk_ingame_ai_take_turn();
 
 #endif
