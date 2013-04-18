@@ -61,19 +61,9 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
    '@' becomes a player and goes into player_root linked list
   */
   *cap_root = (Cap *)malloc(sizeof(Cap));
-  (*cap_root)->x = -1;
-  (*cap_root)->y = -1;
-  (*cap_root)->is_active = 0;
-  (*cap_root)->color = 0;
-  (*cap_root)->next = NULL;
   cap_ptr = cap_root[0];
 
   *player_root = (Player *)malloc(sizeof(Player));
-  (*player_root)->symbol = -1;
-  (*player_root)->color = -1;
-  (*player_root)->is_player = -1;
-  (*player_root)->hover_color = -1;
-  (*player_root)->cap_list = NULL;
   player_ptr = player_root[0];
 
   for(p = map_buffer[0], x = 0, y = 0; *p != '\0'  ; p++, x++) {
@@ -86,7 +76,6 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
       cap_ptr = cap_ptr->next;
       cap_ptr->x = x;
       cap_ptr->y = y;
-      cap_ptr->is_active = 1;
       cap_ptr->color = rand() % 6 + 1; 
       cap_ptr->next = NULL;
     }
@@ -100,6 +89,7 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
       else
         player_ptr->is_player = 0;
       player_ptr->hover_color = 0;
+      player_ptr->hover_list = NULL;
 
       player_ptr->cap_list = (CapList *)malloc(sizeof(CapList));
       player_ptr->cap_list->x = x;
@@ -119,6 +109,7 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
   player_ptr->color = player_killer->color;
   player_ptr->is_player = player_killer->is_player;
   player_ptr->hover_color = player_killer->hover_color;
+  player_ptr->hover_list = player_killer->hover_list;
   player_ptr->cap_list = player_killer->cap_list;
   player_ptr->next = player_killer->next;
 
@@ -130,7 +121,6 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
   
   cap_ptr->x = cap_killer->x;
   cap_ptr->y = cap_killer->y;
-  cap_ptr->is_active = cap_killer->is_active;
   cap_ptr->color = cap_killer->color;
   cap_ptr->next = cap_killer->next;
 
@@ -251,4 +241,113 @@ int vvk_ingame_event(SDL_Surface** stdscr, SDL_Surface** imgscr,
 
 int vvk_ingame_ai_take_turn() {
   return 0;
+}
+
+void vvk_cap_hover(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                   Cap** cap_root, Player** player_root) {
+
+  Cap *cap_ptr = NULL;
+  Player *player_ptr = NULL;
+  CapList *cl_ptr = NULL, *cl_aux_ptr = NULL, *hover_ptr = NULL;
+
+  int colorblocked = 0;
+  
+  SDL_Rect source, target;
+  source.w = TILESIZE; source.h = TILESIZE;
+  target.w = TILESIZE; target.h = TILESIZE;
+
+  for (player_ptr = player_root[0]; player_ptr->next != NULL; ) {
+    player_ptr = player_ptr->next;
+    if (player_ptr->color == (*player_root)->color) {
+      colorblocked = 1;
+      break;
+    }
+  }
+
+  source.x = (*player_root)->hover_color*TILESIZE;
+  if (colorblocked)
+    source.y = TILESIZE;
+  else
+    source.y = (*player_root)->symbol*TILESIZE;
+
+  (*player_root)->hover_list = (CapList *)malloc(sizeof(CapList));
+  hover_ptr = (*player_root)->hover_list;
+
+  for (cap_ptr = cap_root[0]; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
+    if (cap_ptr->color == (*player_root)->hover_color) {
+      for (cl_ptr = (*player_root)->cap_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+
+        if (cap_ptr->x == cl_ptr->x
+            && cap_ptr->y >= cl_ptr->y-1
+            && cap_ptr->y <= cl_ptr->y+1) {
+          hover_ptr->next = (CapList *)malloc(sizeof(CapList));
+          hover_ptr = hover_ptr->next;
+          hover_ptr->x = cap_ptr->x;
+          hover_ptr->y = cap_ptr->y;
+          hover_ptr->next = NULL;
+        }
+
+        else if (cap_ptr->y == cl_ptr->y
+                 && cap_ptr->x >= cl_ptr->x-1
+                 && cap_ptr->x <= cl_ptr->x+1) {
+          hover_ptr->next = (CapList *)malloc(sizeof(CapList));
+          hover_ptr = hover_ptr->next;
+          hover_ptr->x = cap_ptr->x;
+          hover_ptr->y = cap_ptr->y;
+          hover_ptr->next = NULL;
+        }
+      }
+    }
+  }
+  
+  cl_ptr = (*player_root)->hover_list;
+  cl_aux_ptr = cl_ptr->next;
+  cl_ptr->x = cl_aux_ptr->x;
+  cl_ptr->y = cl_aux_ptr->y;
+  cl_ptr->next = cl_aux_ptr->next;
+  free(cl_aux_ptr);
+
+  for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+    for (cap_ptr = cap_root[0]; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
+      for (cl_aux_ptr = (*player_root)->hover_list;
+           cl_aux_ptr != NULL; cl_aux_ptr = cl_aux_ptr->next) {
+        if (!(cl_aux_ptr->x == cap_ptr->x && cl_aux_ptr->y == cap_ptr->y)) {
+          if (cap_ptr->color == (*player_root)->hover_color) {
+            
+            
+            if (cap_ptr->x == cl_ptr->x
+                && cap_ptr->y >= cl_ptr->y-1
+                && cap_ptr->y <= cl_ptr->y+1) {
+              hover_ptr->next = (CapList *)malloc(sizeof(CapList));
+              hover_ptr = hover_ptr->next;
+              hover_ptr->x = cap_ptr->x;
+              hover_ptr->y = cap_ptr->y;
+              hover_ptr->next = NULL;
+            }
+            
+            else if (cap_ptr->y == cl_ptr->y
+                     && cap_ptr->x >= cl_ptr->x-1
+                     && cap_ptr->x <= cl_ptr->x+1) {
+              hover_ptr->next = (CapList *)malloc(sizeof(CapList));
+              hover_ptr = hover_ptr->next;
+              hover_ptr->x = cap_ptr->x;
+              hover_ptr->y = cap_ptr->y;
+              hover_ptr->next = NULL;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+    target.x = cl_ptr->x*TILESIZE;
+    target.y = cl_ptr->y*TILESIZE;
+    SDL_BlitSurface(*stdimg, &source, *stdscr, &target);
+  }
+  
+}
+
+void vvk_cap_hover(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                   Cap** cap_root, Player** player_root) {
 }

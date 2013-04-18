@@ -11,7 +11,6 @@ typedef struct Cap {
   
   int x;
   int y;
-  int is_active;
   int color;
 
   struct Cap *next;
@@ -34,6 +33,7 @@ typedef struct Player {
   int is_player;
   int hover_color;
 
+  struct CapList *hover_list;
   struct CapList *cap_list;
   struct Player *next;
   
@@ -50,5 +50,7 @@ int vvk_play_game(SDL_Surface** stdscr, SDL_Surface** imgscr,
 int vvk_ingame_event(SDL_Surface** stdscr, SDL_Surface** imgscr,
                      Cap** cap_root, Player** player_root, SDL_Event* event);
 int vvk_ingame_ai_take_turn();
+void vvk_cap_hover(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                   Cap** cap_root, Player** player_root);
 
 #endif
