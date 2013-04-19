@@ -304,6 +304,34 @@ void vvk_find_nearby_caps(Cap** cap_root, Player** player_root) {
     (*player_root)->hover_list = NULL;
     return;
   }
+
+  for (cap_ptr = cap_root[0]; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
+    if (cap_ptr->color == (*player_root)->hover_color) {
+      for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+        if ((cap_ptr->y == cl_ptr->y
+             && (cap_ptr->x == cl_ptr->x-1 || cap_ptr->x == cl_ptr->x+1))
+            || (cap_ptr->x == cl_ptr->x
+                && (cap_ptr->y == cl_ptr->y-1 || cap_ptr->y == cl_ptr->y+1))) {
+          if (!vvk_is_in_hoverlist(cap_ptr->x, cap_ptr->y, player_root)
+              && !vvk_is_in_caplist(cap_ptr->x, cap_ptr->y, player_root)) {
+            found_caps++;
+          hl_ptr->next = (CapList *)malloc(sizeof(CapList));
+          hl_ptr = hl_ptr->next;
+          hl_ptr->x = cap_ptr->x;
+          hl_ptr->y = cap_ptr->y;
+          hl_ptr->next = NULL;
+          }
+        }
+      }
+    }
+  }
+
+  hl_ptr = (*player_root)->hover_list;
+  cl_ptr = hl_ptr->next;
+  hl_ptr->x = cl_ptr->x;
+  hl_ptr->y = cl_ptr->y;
+  hl_ptr->next = cl_ptr->next;
+  free(cl_ptr);
 }
 
 void vvk_free_hoverlist(Player** player_root) {
@@ -320,3 +348,24 @@ void vvk_free_hoverlist(Player** player_root) {
   (*player_root)->hover_list = NULL;
 }
   
+int vvk_is_in_hoverlist(int x, int y, Player** player_root) {
+
+  CapList *cl_ptr = NULL;
+
+  for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+    if (cl_ptr->x == x && cl_ptr->y == y)
+      return 1;
+  }
+  return 0;
+}
+
+int vvk_is_in_caplist(int x, int y, Player** player_root) {
+
+  CapList *cl_ptr = NULL;
+
+  for (cl_ptr = (*player_root)->cap_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+    if (cl_ptr->x == x && cl_ptr->y == y)
+      return 1;
+  }
+  return 0;
+}

@@ -52,4 +52,6 @@ int vvk_ingame_event(SDL_Surface** stdscr, SDL_Surface** imgscr,
 int vvk_ingame_ai_take_turn();
 void vvk_find_nearby_caps(Cap** cap_root, Player** player_root);
 void vvk_free_hoverlist(Player** player_root);
+int vvk_is_in_hoverlist(int x, int y, Player** player_root);
+int vvk_is_in_caplist(int x, int y, Player** player_root);
 #endif
