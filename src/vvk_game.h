@@ -54,4 +54,6 @@ void vvk_find_nearby_caps(Cap** cap_root, Player** player_root);
 void vvk_free_hoverlist(Player** player_root);
 int vvk_is_in_hoverlist(int x, int y, Player** player_root);
 int vvk_is_in_caplist(int x, int y, Player** player_root);
+int vvk_remove_cap(int x, int y, Cap** cap_root);
+int vvk_capture_hovercaps(Cap** cap_root, Player** player_root);
 #endif

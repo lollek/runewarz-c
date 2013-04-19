@@ -249,6 +249,11 @@ int vvk_ingame_event(SDL_Surface** stdscr, SDL_Surface** imgscr,
           vvk_draw_hoverlist(stdscr, imgscr, player_root);
           return 1; break;
         }
+        case SDLK_RETURN: {
+          vvk_capture_hovercaps(cap_root, player_root);
+          printf("done!\n");
+          return 1; break;
+        }
         case SDLK_ESCAPE: return -1; break;
         default: return 0; break;
       }
@@ -299,7 +304,6 @@ void vvk_find_nearby_caps(Cap** cap_root, Player** player_root) {
   }
 
   if (!found_caps) {
-    fprintf(stderr, "0 caps found\n");
     free(hl_ptr);
     (*player_root)->hover_list = NULL;
     return;
@@ -366,6 +370,50 @@ int vvk_is_in_caplist(int x, int y, Player** player_root) {
   for (cl_ptr = (*player_root)->cap_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
     if (cl_ptr->x == x && cl_ptr->y == y)
       return 1;
+  }
+  return 0;
+}
+
+int vvk_remove_cap(int x, int y, Cap** cap_root) {
+  Cap *cap_ptr = NULL, *cap_chainer = NULL;
+
+  for (cap_ptr = cap_root[0]; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
+    if (cap_ptr->x == x && cap_ptr->y == y) {
+      cap_chainer->next = cap_ptr->next;
+      free(cap_ptr);
+      return 0;
+    }
+    cap_chainer = cap_ptr;
+  }
+  
+  return 1;
+}
+
+int vvk_capture_hovercaps(Cap** cap_root, Player** player_root) {
+
+  CapList *cl_ptr = NULL, *hl_ptr = NULL, *del_ptr = NULL;
+
+  if ((*player_root)->hover_list == NULL)
+    return 1;
+
+  for (cl_ptr = (*player_root)->cap_list; cl_ptr->next != NULL; cl_ptr = cl_ptr->next);
+  
+  hl_ptr = (*player_root)->hover_list;
+  cl_ptr->next = hl_ptr;
+  (*player_root)->hover_list = NULL;
+
+  (*player_root)->color = (*player_root)->hover_color;
+
+  for (del_ptr = (*player_root)->cap_list; del_ptr != NULL; del_ptr = del_ptr->next)
+    vvk_remove_cap(del_ptr->x, del_ptr->y, cap_root);
+
+  printf("CapList:\n");
+  for (cl_ptr = (*player_root)->cap_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+    printf("%d : %d\n", cl_ptr->x, cl_ptr->y);
+  }
+  printf("HoverList:\n");
+  for (hl_ptr = (*player_root)->hover_list; hl_ptr != NULL; hl_ptr = hl_ptr->next) {
+    printf("%d : %d\n", hl_ptr->x, hl_ptr->y);
   }
   return 0;
 }
