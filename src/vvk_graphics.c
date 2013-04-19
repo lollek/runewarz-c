@@ -107,100 +107,36 @@ void vvk_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
   }
 }
 
-void vvk_draw_hover(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                    Cap** cap_root, Player** player_root) {
-
-  Cap *cap_ptr = cap_root[0];
-  Player *player_ptr = player_root[0], *player_aux_ptr = NULL;
-  CapList *cap_list_ptr = NULL;
-
-  int cap_is_blocked = 0;
-
+void vvk_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                        Player** player_root) {
+  CapList *cl_ptr = NULL;
   SDL_Rect source, target;
+  source.x = (*player_root)->hover_color*TILESIZE;
+  source.y = 2*TILESIZE;
   source.w = TILESIZE; source.h = TILESIZE;
   target.w = TILESIZE; target.h = TILESIZE;
 
-  for (player_aux_ptr = player_root[0];
-       player_aux_ptr != NULL;
-       player_aux_ptr = player_aux_ptr->next) {
-    if (player_aux_ptr->color == player_ptr->hover_color
-        && player_aux_ptr->is_player == -1)
-      cap_is_blocked = 1;
-  }
+  for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+    target.x = cl_ptr->x*TILESIZE;
+    target.y = cl_ptr->y*TILESIZE;
 
-  source.x = player_ptr->hover_color*TILESIZE;
-  if (cap_is_blocked)
-    source.y = TILESIZE;
-  else
-    source.y = player_ptr->symbol*TILESIZE;
-  
-  while (cap_ptr != NULL) {
-    if (cap_ptr->color == player_ptr->hover_color) {
-      for (cap_list_ptr = player_ptr->cap_list;
-           cap_list_ptr != NULL;
-           cap_list_ptr = cap_list_ptr->next) {
-
-        if (cap_ptr->x == cap_list_ptr->x
-            && cap_ptr->y >= cap_list_ptr->y-1
-            && cap_ptr->y <= cap_list_ptr->y+1) {
-          target.x = cap_ptr->x*TILESIZE;
-          target.y = cap_ptr->y*TILESIZE;
-          SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
-        }
-          
-
-        else if (cap_ptr->y == cap_list_ptr->y
-                 && cap_ptr->x >= cap_list_ptr->x-1
-                 && cap_ptr->x <= cap_list_ptr->x+1) {
-          target.x = cap_ptr->x*TILESIZE;
-          target.y = cap_ptr->y*TILESIZE;
-          SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
-        }
-      }
-    }
-    cap_ptr = cap_ptr->next;
+    SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
   }
 }
 
-void vvk_draw_unhoover(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                      Cap** cap_root, Player** player_root) {
-
-  Cap *cap_ptr = cap_root[0];
-  Player *player_ptr = player_root[0];
-  CapList *cap_list_ptr = NULL;
-
+void vvk_draw_hoverlist_blank(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                              Player** player_root) {
+  CapList *cl_ptr = NULL;
   SDL_Rect source, target;
+  source.x = (*player_root)->hover_color*TILESIZE;
+  source.y = 0;
   source.w = TILESIZE; source.h = TILESIZE;
   target.w = TILESIZE; target.h = TILESIZE;
 
-  source.x = player_ptr->hover_color*TILESIZE;
-  source.y = 0;
-  
-  while (cap_ptr != NULL) {
-    if (cap_ptr->color == player_ptr->hover_color) {
-      for (cap_list_ptr = player_ptr->cap_list;
-           cap_list_ptr != NULL;
-           cap_list_ptr = cap_list_ptr->next) {
+  for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+    target.x = cl_ptr->x*TILESIZE;
+    target.y = cl_ptr->y*TILESIZE;
 
-        if (cap_ptr->x == cap_list_ptr->x
-            && cap_ptr->y >= cap_list_ptr->y-1
-            && cap_ptr->y <= cap_list_ptr->y+1) {
-          target.x = cap_ptr->x*TILESIZE;
-          target.y = cap_ptr->y*TILESIZE;
-          SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
-        }
-          
-
-        else if (cap_ptr->y == cap_list_ptr->y
-                 && cap_ptr->x >= cap_list_ptr->x-1
-                 && cap_ptr->x <= cap_list_ptr->x+1) {
-          target.x = cap_ptr->x*TILESIZE;
-          target.y = cap_ptr->y*TILESIZE;
-          SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
-        }
-      }
-    }
-    cap_ptr = cap_ptr->next;
+    SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
   }
-  
 }

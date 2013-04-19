@@ -34,7 +34,7 @@ int vvk_load_mapfile(const char* mapname, char** buf) {
   }
 
   /* Fetch the file into buf: */
-  *buf = malloc(sizeof(char)*vvk_get_filesize(fd));
+  *buf = (char *)malloc(sizeof(char)*vvk_get_filesize(fd));
   
   fgets(minibuf, sizeof minibuf, fd);
   strcpy(*buf, minibuf);
@@ -139,6 +139,8 @@ void vvk_free_map(Cap** cap_root, Player** player_root) {
   Player *player_ptr = player_root[0], *player_killer = NULL;
   CapList *cap_list_ptr = NULL, *cap_list_killer = NULL;
 
+  vvk_free_hoverlist(player_root);
+
   while (cap_ptr != NULL) {
     cap_killer = cap_ptr;
     cap_ptr = cap_ptr->next;
@@ -194,38 +196,57 @@ int vvk_ingame_event(SDL_Surface** stdscr, SDL_Surface** imgscr,
     if (event->type == SDL_KEYDOWN) {
       switch (event->key.keysym.sym) {
         case SDLK_1: {
+          vvk_draw_hoverlist_blank(stdscr, imgscr, player_root);
+          vvk_free_hoverlist(player_root);
+
           (*player_root)->hover_color = 1;
-          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          vvk_find_nearby_caps(cap_root, player_root);
+          vvk_draw_hoverlist(stdscr, imgscr, player_root);
           return 1; break;
         }
         case SDLK_2: {
+          vvk_draw_hoverlist_blank(stdscr, imgscr, player_root);
+          vvk_free_hoverlist(player_root);
+
           (*player_root)->hover_color = 2;
-          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          vvk_find_nearby_caps(cap_root, player_root);
+          vvk_draw_hoverlist(stdscr, imgscr, player_root);
           return 1; break;
         }
         case SDLK_3: {
+          vvk_draw_hoverlist_blank(stdscr, imgscr, player_root);
+          vvk_free_hoverlist(player_root);
+
           (*player_root)->hover_color = 3;
-          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          vvk_find_nearby_caps(cap_root, player_root);
+          vvk_draw_hoverlist(stdscr, imgscr, player_root);
           return 1; break;
         }
         case SDLK_4: {
+          vvk_draw_hoverlist_blank(stdscr, imgscr, player_root);
+          vvk_free_hoverlist(player_root);
+
           (*player_root)->hover_color = 4;
-          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          vvk_find_nearby_caps(cap_root, player_root);
+          vvk_draw_hoverlist(stdscr, imgscr, player_root);
           return 1; break;
         }
         case SDLK_5: {
+          vvk_draw_hoverlist_blank(stdscr, imgscr, player_root);
+          vvk_free_hoverlist(player_root);
+
           (*player_root)->hover_color = 5;
-          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
+          vvk_find_nearby_caps(cap_root, player_root);
+          vvk_draw_hoverlist(stdscr, imgscr, player_root);
           return 1; break;
         }
         case SDLK_6: {
+          vvk_draw_hoverlist_blank(stdscr, imgscr, player_root);
+          vvk_free_hoverlist(player_root);
+
           (*player_root)->hover_color = 6;
-          vvk_draw_hover(stdscr, imgscr, cap_root, player_root);
-          return 1; break;
-        }
-        case SDLK_0: {
-          vvk_draw_unhoover(stdscr, imgscr, cap_root, player_root);
-          (*player_root)->hover_color = 0;
+          vvk_find_nearby_caps(cap_root, player_root);
+          vvk_draw_hoverlist(stdscr, imgscr, player_root);
           return 1; break;
         }
         case SDLK_ESCAPE: return -1; break;
@@ -243,111 +264,59 @@ int vvk_ingame_ai_take_turn() {
   return 0;
 }
 
-void vvk_cap_hover(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                   Cap** cap_root, Player** player_root) {
+void vvk_find_nearby_caps(Cap** cap_root, Player** player_root) {
 
+  int found_caps = 0;
   Cap *cap_ptr = NULL;
-  Player *player_ptr = NULL;
-  CapList *cl_ptr = NULL, *cl_aux_ptr = NULL, *hover_ptr = NULL;
+  CapList *cl_ptr = NULL, *hl_ptr = NULL;
 
-  int colorblocked = 0;
-  
-  SDL_Rect source, target;
-  source.w = TILESIZE; source.h = TILESIZE;
-  target.w = TILESIZE; target.h = TILESIZE;
-
-  for (player_ptr = player_root[0]; player_ptr->next != NULL; ) {
-    player_ptr = player_ptr->next;
-    if (player_ptr->color == (*player_root)->color) {
-      colorblocked = 1;
-      break;
-    }
+  if ((*player_root)->hover_list != NULL) {
+    fprintf(stderr, "hover_list is not NULL!\n");
+    return;
   }
-
-  source.x = (*player_root)->hover_color*TILESIZE;
-  if (colorblocked)
-    source.y = TILESIZE;
-  else
-    source.y = (*player_root)->symbol*TILESIZE;
-
+  
   (*player_root)->hover_list = (CapList *)malloc(sizeof(CapList));
-  hover_ptr = (*player_root)->hover_list;
+  hl_ptr = (*player_root)->hover_list;
+  
 
   for (cap_ptr = cap_root[0]; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
     if (cap_ptr->color == (*player_root)->hover_color) {
       for (cl_ptr = (*player_root)->cap_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
 
-        if (cap_ptr->x == cl_ptr->x
-            && cap_ptr->y >= cl_ptr->y-1
-            && cap_ptr->y <= cl_ptr->y+1) {
-          hover_ptr->next = (CapList *)malloc(sizeof(CapList));
-          hover_ptr = hover_ptr->next;
-          hover_ptr->x = cap_ptr->x;
-          hover_ptr->y = cap_ptr->y;
-          hover_ptr->next = NULL;
-        }
-
-        else if (cap_ptr->y == cl_ptr->y
-                 && cap_ptr->x >= cl_ptr->x-1
-                 && cap_ptr->x <= cl_ptr->x+1) {
-          hover_ptr->next = (CapList *)malloc(sizeof(CapList));
-          hover_ptr = hover_ptr->next;
-          hover_ptr->x = cap_ptr->x;
-          hover_ptr->y = cap_ptr->y;
-          hover_ptr->next = NULL;
+        if ((cap_ptr->y == cl_ptr->y
+             && (cap_ptr->x == cl_ptr->x-1 || cap_ptr->x == cl_ptr->x+1))
+            || (cap_ptr->x == cl_ptr->x
+                && (cap_ptr->y == cl_ptr->y-1 || cap_ptr->y == cl_ptr->y+1))) {
+          found_caps++;
+          hl_ptr->next = (CapList *)malloc(sizeof(CapList));
+          hl_ptr = hl_ptr->next;
+          hl_ptr->x = cap_ptr->x;
+          hl_ptr->y = cap_ptr->y;
+          hl_ptr->next = NULL;
         }
       }
     }
   }
+
+  if (!found_caps) {
+    fprintf(stderr, "0 caps found\n");
+    free(hl_ptr);
+    (*player_root)->hover_list = NULL;
+    return;
+  }
+}
+
+void vvk_free_hoverlist(Player** player_root) {
+
+  CapList *cl_ptr = NULL, *cl_killer = NULL;
   
   cl_ptr = (*player_root)->hover_list;
-  cl_aux_ptr = cl_ptr->next;
-  cl_ptr->x = cl_aux_ptr->x;
-  cl_ptr->y = cl_aux_ptr->y;
-  cl_ptr->next = cl_aux_ptr->next;
-  free(cl_aux_ptr);
-
-  for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
-    for (cap_ptr = cap_root[0]; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
-      for (cl_aux_ptr = (*player_root)->hover_list;
-           cl_aux_ptr != NULL; cl_aux_ptr = cl_aux_ptr->next) {
-        if (!(cl_aux_ptr->x == cap_ptr->x && cl_aux_ptr->y == cap_ptr->y)) {
-          if (cap_ptr->color == (*player_root)->hover_color) {
-            
-            
-            if (cap_ptr->x == cl_ptr->x
-                && cap_ptr->y >= cl_ptr->y-1
-                && cap_ptr->y <= cl_ptr->y+1) {
-              hover_ptr->next = (CapList *)malloc(sizeof(CapList));
-              hover_ptr = hover_ptr->next;
-              hover_ptr->x = cap_ptr->x;
-              hover_ptr->y = cap_ptr->y;
-              hover_ptr->next = NULL;
-            }
-            
-            else if (cap_ptr->y == cl_ptr->y
-                     && cap_ptr->x >= cl_ptr->x-1
-                     && cap_ptr->x <= cl_ptr->x+1) {
-              hover_ptr->next = (CapList *)malloc(sizeof(CapList));
-              hover_ptr = hover_ptr->next;
-              hover_ptr->x = cap_ptr->x;
-              hover_ptr->y = cap_ptr->y;
-              hover_ptr->next = NULL;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
-    target.x = cl_ptr->x*TILESIZE;
-    target.y = cl_ptr->y*TILESIZE;
-    SDL_BlitSurface(*stdimg, &source, *stdscr, &target);
+  while (cl_ptr != NULL) {
+    cl_killer = cl_ptr;
+    cl_ptr = cl_ptr->next;
+    free(cl_killer);
   }
   
+  (*player_root)->hover_list = NULL;
 }
-
-void vvk_cap_hover(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                   Cap** cap_root, Player** player_root) {
-}
+  

@@ -50,7 +50,6 @@ int vvk_play_game(SDL_Surface** stdscr, SDL_Surface** imgscr,
 int vvk_ingame_event(SDL_Surface** stdscr, SDL_Surface** imgscr,
                      Cap** cap_root, Player** player_root, SDL_Event* event);
 int vvk_ingame_ai_take_turn();
-void vvk_cap_hover(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                   Cap** cap_root, Player** player_root);
-
+void vvk_find_nearby_caps(Cap** cap_root, Player** player_root);
+void vvk_free_hoverlist(Player** player_root);
 #endif
