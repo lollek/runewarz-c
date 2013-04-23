@@ -17,15 +17,6 @@ typedef struct Cap {
   
 } Cap;
 
-typedef struct CapList {
-
-  int x;
-  int y;
-
-  struct CapList *next;
-  
-} CapList;
-
 typedef struct Player {
 
   int symbol;
@@ -33,8 +24,8 @@ typedef struct Player {
   int is_player;
   int hover_color;
 
-  struct CapList *hover_list;
-  struct CapList *cap_list;
+  struct Cap *hover_list;
+  struct Cap *cap_list;
   struct Player *next;
   
 } Player;

@@ -91,7 +91,7 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
       player_ptr->hover_color = 0;
       player_ptr->hover_list = NULL;
 
-      player_ptr->cap_list = (CapList *)malloc(sizeof(CapList));
+      player_ptr->cap_list = (Cap *)malloc(sizeof(Cap));
       player_ptr->cap_list->x = x;
       player_ptr->cap_list->y = y;
       player_ptr->cap_list->next = NULL;
@@ -135,12 +135,13 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
 
 void vvk_free_map(Cap** cap_root, Player** player_root) {
 
-  Cap *cap_ptr = cap_root[0], *cap_killer = NULL;
-  Player *player_ptr = player_root[0], *player_killer = NULL;
-  CapList *cap_list_ptr = NULL, *cap_list_killer = NULL;
+  Cap *cap_ptr = NULL, *cap_killer = NULL;
+  Player *player_ptr = NULL, *player_killer = NULL;
+  Cap *cl_ptr = NULL, *cl_killer = NULL;
 
   vvk_free_hoverlist(player_root);
 
+  cap_ptr = cap_root[0];
   while (cap_ptr != NULL) {
     cap_killer = cap_ptr;
     cap_ptr = cap_ptr->next;
@@ -149,16 +150,17 @@ void vvk_free_map(Cap** cap_root, Player** player_root) {
     cap_killer = NULL;
   }
 
+  player_ptr =player_root[0];
   while (player_ptr != NULL) {
     player_killer = player_ptr;
     player_ptr = player_ptr->next;
 
-    cap_list_ptr = player_killer->cap_list;
-    while (cap_list_ptr != NULL) {
-      cap_list_killer = cap_list_ptr;
-      cap_list_ptr = cap_list_ptr->next;
-      free(cap_list_killer);
-      cap_list_killer = NULL;
+    cl_ptr = player_killer->cap_list;
+    while (cl_ptr != NULL) {
+      cl_killer = cl_ptr;
+      cl_ptr = cl_ptr->next;
+      free(cl_killer);
+      cl_killer = NULL;
     }
 
     free(player_killer);
@@ -273,14 +275,14 @@ void vvk_find_nearby_caps(Cap** cap_root, Player** player_root) {
 
   int found_caps = 0;
   Cap *cap_ptr = NULL;
-  CapList *cl_ptr = NULL, *hl_ptr = NULL;
+  Cap *cl_ptr = NULL, *hl_ptr = NULL;
 
   if ((*player_root)->hover_list != NULL) {
     fprintf(stderr, "hover_list is not NULL!\n");
     return;
   }
   
-  (*player_root)->hover_list = (CapList *)malloc(sizeof(CapList));
+  (*player_root)->hover_list = (Cap *)malloc(sizeof(Cap));
   hl_ptr = (*player_root)->hover_list;
   
 
@@ -293,7 +295,7 @@ void vvk_find_nearby_caps(Cap** cap_root, Player** player_root) {
             || (cap_ptr->x == cl_ptr->x
                 && (cap_ptr->y == cl_ptr->y-1 || cap_ptr->y == cl_ptr->y+1))) {
           found_caps++;
-          hl_ptr->next = (CapList *)malloc(sizeof(CapList));
+          hl_ptr->next = (Cap *)malloc(sizeof(Cap));
           hl_ptr = hl_ptr->next;
           hl_ptr->x = cap_ptr->x;
           hl_ptr->y = cap_ptr->y;
@@ -319,7 +321,7 @@ void vvk_find_nearby_caps(Cap** cap_root, Player** player_root) {
           if (!vvk_is_in_hoverlist(cap_ptr->x, cap_ptr->y, player_root)
               && !vvk_is_in_caplist(cap_ptr->x, cap_ptr->y, player_root)) {
             found_caps++;
-          hl_ptr->next = (CapList *)malloc(sizeof(CapList));
+          hl_ptr->next = (Cap *)malloc(sizeof(Cap));
           hl_ptr = hl_ptr->next;
           hl_ptr->x = cap_ptr->x;
           hl_ptr->y = cap_ptr->y;
@@ -340,7 +342,7 @@ void vvk_find_nearby_caps(Cap** cap_root, Player** player_root) {
 
 void vvk_free_hoverlist(Player** player_root) {
 
-  CapList *cl_ptr = NULL, *cl_killer = NULL;
+  Cap *cl_ptr = NULL, *cl_killer = NULL;
   
   cl_ptr = (*player_root)->hover_list;
   while (cl_ptr != NULL) {
@@ -354,7 +356,7 @@ void vvk_free_hoverlist(Player** player_root) {
   
 int vvk_is_in_hoverlist(int x, int y, Player** player_root) {
 
-  CapList *cl_ptr = NULL;
+  Cap *cl_ptr = NULL;
 
   for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
     if (cl_ptr->x == x && cl_ptr->y == y)
@@ -365,7 +367,7 @@ int vvk_is_in_hoverlist(int x, int y, Player** player_root) {
 
 int vvk_is_in_caplist(int x, int y, Player** player_root) {
 
-  CapList *cl_ptr = NULL;
+  Cap *cl_ptr = NULL;
 
   for (cl_ptr = (*player_root)->cap_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
     if (cl_ptr->x == x && cl_ptr->y == y)
@@ -391,7 +393,7 @@ int vvk_remove_cap(int x, int y, Cap** cap_root) {
 
 int vvk_capture_hovercaps(Cap** cap_root, Player** player_root) {
 
-  CapList *cl_ptr = NULL, *hl_ptr = NULL, *del_ptr = NULL;
+  Cap *cl_ptr = NULL, *hl_ptr = NULL, *del_ptr = NULL;
 
   if ((*player_root)->hover_list == NULL)
     return 1;

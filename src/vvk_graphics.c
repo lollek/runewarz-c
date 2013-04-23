@@ -71,7 +71,7 @@ void vvk_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
 
   Cap *cap_ptr = cap_root[0];
   Player *player_ptr = player_root[0];
-  CapList *cap_list_ptr = NULL;
+  Cap *cap_list_ptr = NULL;
 
   SDL_Rect source, target;
   source.w = TILESIZE; source.h = TILESIZE;
@@ -109,7 +109,7 @@ void vvk_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
 
 void vvk_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr,
                         Player** player_root) {
-  CapList *cl_ptr = NULL;
+  Cap *cl_ptr = NULL;
   SDL_Rect source, target;
   source.x = (*player_root)->hover_color*TILESIZE;
   source.y = 2*TILESIZE;
@@ -126,7 +126,7 @@ void vvk_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr,
 
 void vvk_draw_hoverlist_blank(SDL_Surface** stdscr, SDL_Surface** imgscr,
                               Player** player_root) {
-  CapList *cl_ptr = NULL;
+  Cap *cl_ptr = NULL;
   SDL_Rect source, target;
   source.x = (*player_root)->hover_color*TILESIZE;
   source.y = 0;
