@@ -122,6 +122,12 @@ void vvk_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr,
 
     SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
   }
+  for (cl_ptr = (*player_root)->cap_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+    target.x = cl_ptr->x*TILESIZE;
+    target.y = cl_ptr->y*TILESIZE;
+
+    SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
+  }
 }
 
 void vvk_draw_hoverlist_blank(SDL_Surface** stdscr, SDL_Surface** imgscr,
