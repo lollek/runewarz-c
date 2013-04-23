@@ -73,7 +73,6 @@ int main(void) {
   if (vvk_load_mapfile("map2_2", &map_buffer) == 1)
     return 1;
   vvk_make_map(&map_buffer, &cap_root, &player_root, &instances);
-  fprintf(stderr, "%d+1 instances", --instances);
 
   vvk_play_game(&stdscr, &imgscr, &cap_root, &player_root, instances);
   

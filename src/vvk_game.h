@@ -14,6 +14,7 @@ typedef struct Cap {
   int color;
 
   struct Cap *next;
+  struct Cap *prev;
   
 } Cap;
 
