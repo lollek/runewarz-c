@@ -61,6 +61,7 @@ void exit_graphics(SDL_Surface** imgscr) {
 
 int main(void) {
   SDL_Surface *stdscr = NULL, *imgscr = NULL;
+  int instances = 0;
   char *map_buffer = NULL;
   Cap *cap_root = NULL;
   Player *player_root = NULL;
@@ -71,9 +72,10 @@ int main(void) {
 
   if (vvk_load_mapfile("map2_2", &map_buffer) == 1)
     return 1;
-  vvk_make_map(&map_buffer, &cap_root, &player_root);
+  vvk_make_map(&map_buffer, &cap_root, &player_root, &instances);
+  fprintf(stderr, "%d+1 instances", --instances);
 
-  vvk_play_game(&stdscr, &imgscr, &cap_root, &player_root);
+  vvk_play_game(&stdscr, &imgscr, &cap_root, &player_root, instances);
   
   
   vvk_free_map(&cap_root, &player_root);

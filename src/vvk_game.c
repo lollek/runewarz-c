@@ -47,7 +47,7 @@ int vvk_load_mapfile(const char* mapname, char** buf) {
   return 0;
 }
 
-int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
+int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root, int* instances) {
 
   int x, y, players = 2;
   char *p = NULL;
@@ -72,6 +72,7 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
       x = -1;
     }
     else if (*p == '#') {
+      (*instances)++;
       cap_ptr->next = (Cap *)malloc(sizeof(Cap));
       cap_ptr = cap_ptr->next;
       cap_ptr->x = x;
@@ -80,6 +81,7 @@ int vvk_make_map(char** map_buffer, Cap** cap_root, Player** player_root) {
       cap_ptr->next = NULL;
     }
     else if (*p == '@') {
+      (*instances)++;
       player_ptr->next = (Player *)malloc(sizeof(Player));
       player_ptr = player_ptr->next;
       player_ptr->symbol = players++;
@@ -169,7 +171,7 @@ void vvk_free_map(Cap** cap_root, Player** player_root) {
 }
 
 int vvk_play_game(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                  Cap** cap_root, Player** player_root) {
+                  Cap** cap_root, Player** player_root, int instances) {
 
   SDL_Event event;
   Player* player_ptr = NULL;
@@ -187,6 +189,7 @@ int vvk_play_game(SDL_Surface** stdscr, SDL_Surface** imgscr,
       else
         vvk_ingame_ai_take_turn();
     }
+    vvk_sanity_check(cap_root, player_root, instances);
   }
   
   return 0;
@@ -285,6 +288,8 @@ void vvk_find_nearby_caps(Cap** cap_root, Player** player_root) {
   
   (*player_root)->hover_list = (Cap *)malloc(sizeof(Cap));
   hl_ptr = (*player_root)->hover_list;
+  hl_ptr->x = -1;
+  hl_ptr->y = -1;
 
   cap_ptr = cap_root[0];
   while (cap_ptr != NULL) {
@@ -396,5 +401,24 @@ int vvk_capture_hovercaps(Cap** cap_root, Player** player_root) {
     printf("%d : %d\t", cl_ptr->x, cl_ptr->y);
   }
   printf("\n");
+  return 0;
+}
+
+int vvk_sanity_check(Cap** cap_root, Player** player_root, int instances) {
+
+  int curr_instances = 0;
+  Cap *cap_ptr = NULL;
+
+  for (cap_ptr = cap_root[0]; cap_ptr != NULL; cap_ptr = cap_ptr->next)
+    curr_instances++;
+  for (cap_ptr = (*player_root)->cap_list; cap_ptr != NULL; cap_ptr = cap_ptr->next)
+    curr_instances++;
+  for (cap_ptr = (*player_root)->hover_list; cap_ptr != NULL; cap_ptr = cap_ptr->next)
+    curr_instances++;
+
+  if (!(curr_instances == instances)) {
+    fprintf(stderr, "Missing instances! %d vs %d", instances, curr_instances);
+    return 1;
+  }
   return 0;
 }
