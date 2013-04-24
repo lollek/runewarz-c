@@ -19,6 +19,8 @@ void vvk_render_box_absolute(SDL_Surface** target_surface,
                              int offset_x, int offset_y, int width, int height);
 void vvk_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
                        Cap** cap_root, Player** player_root);
+void vvk_draw_capture(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                      Player** player_root);
 void vvk_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr,
                         Player** player_root);
 void vvk_draw_hoverlist_blank(SDL_Surface** stdscr, SDL_Surface** imgscr,

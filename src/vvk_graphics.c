@@ -69,8 +69,8 @@ void vvk_render_box_absolute(SDL_Surface** target_surface,
 void vvk_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
                        Cap** cap_root, Player** player_root) {
 
-  Cap *cap_ptr = cap_root[0];
-  Player *player_ptr = player_root[0];
+  Cap *cap_ptr = (*cap_root)->next;
+  Player *player_ptr = (*player_root)->next;
   Cap *cap_list_ptr = NULL;
 
   SDL_Rect source, target;
@@ -91,7 +91,7 @@ void vvk_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
 
   /* Draw all free players: */
   while (player_ptr != NULL) {
-    cap_list_ptr = player_ptr->cap_list;
+    cap_list_ptr = player_ptr->cap_list->next;
     
     while (cap_list_ptr != NULL) {
       source.x = player_ptr->color*TILESIZE;
@@ -106,23 +106,38 @@ void vvk_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
     player_ptr = player_ptr->next;
   }
 }
-
-void vvk_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                        Player** player_root) {
+void vvk_draw_capture(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                      Player** player_root) {
   Cap *cl_ptr = NULL;
+  Player *pl_ptr = (*player_root)->next;
   SDL_Rect source, target;
-  source.x = (*player_root)->hover_color*TILESIZE;
+  source.x = pl_ptr->color*TILESIZE;
   source.y = 2*TILESIZE;
   source.w = TILESIZE; source.h = TILESIZE;
   target.w = TILESIZE; target.h = TILESIZE;
 
-  for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+  for (cl_ptr = pl_ptr->cap_list->next; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
     target.x = cl_ptr->x*TILESIZE;
     target.y = cl_ptr->y*TILESIZE;
 
     SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
   }
-  for (cl_ptr = (*player_root)->cap_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+}
+
+void vvk_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr,
+                        Player** player_root) {
+  Cap *cl_ptr = NULL;
+  Player *pl_ptr = (*player_root)->next;
+  SDL_Rect source, target;
+  source.x = pl_ptr->hover_color*TILESIZE;
+  source.y = 2*TILESIZE;
+  source.w = TILESIZE; source.h = TILESIZE;
+  target.w = TILESIZE; target.h = TILESIZE;
+
+  if (pl_ptr->hover_list->next == NULL)
+    return;
+
+  for (cl_ptr = pl_ptr->hover_list->next; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
     target.x = cl_ptr->x*TILESIZE;
     target.y = cl_ptr->y*TILESIZE;
 
@@ -133,13 +148,21 @@ void vvk_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr,
 void vvk_draw_hoverlist_blank(SDL_Surface** stdscr, SDL_Surface** imgscr,
                               Player** player_root) {
   Cap *cl_ptr = NULL;
+  Player *pl_ptr = (*player_root)->next;
   SDL_Rect source, target;
-  source.x = (*player_root)->hover_color*TILESIZE;
+  /* Removed this for bugfinding:
+     source.x = pl_ptr->hover_color*TILESIZE; */
   source.y = 0;
   source.w = TILESIZE; source.h = TILESIZE;
   target.w = TILESIZE; target.h = TILESIZE;
 
-  for (cl_ptr = (*player_root)->hover_list; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+  if (pl_ptr->hover_list->next == NULL)
+    return;
+
+  for (cl_ptr = pl_ptr->hover_list->next; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+    /* Added this for bugfinding: */
+    source.x = cl_ptr->color*TILESIZE;
+    
     target.x = cl_ptr->x*TILESIZE;
     target.y = cl_ptr->y*TILESIZE;
 
