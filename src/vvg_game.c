@@ -12,7 +12,7 @@ int vvg_get_filesize(FILE* fp) {
   return sz;
 }
 
-int vvg_load_mapfile(const char* mapname, char** buf) {
+int vvg_load_mapfile(Master* master, const char* mapname) {
 
   FILE *fd = NULL;
   const char *prepath = "maps/";
@@ -31,12 +31,12 @@ int vvg_load_mapfile(const char* mapname, char** buf) {
   }
 
   /* Fetch the file into buf: */
-  *buf = (char *)malloc(sizeof(char)*vvg_get_filesize(fd));
+  (*master).map_buffer = (char *)malloc(sizeof(char)*vvg_get_filesize(fd));
   
   fgets(minibuf, sizeof minibuf, fd);
-  strcpy(*buf, minibuf);
+  strcpy((*master).map_buffer, minibuf);
   while ((fgets(minibuf, sizeof minibuf, fd)) != NULL)
-    strcat(*buf, minibuf);
+    strcat((*master).map_buffer, minibuf);
 
   fclose(fd);
   free(fullpath);
@@ -44,8 +44,9 @@ int vvg_load_mapfile(const char* mapname, char** buf) {
   return 0;
 }
 
-int vvg_make_map(char** map_buffer, Cap** cap_root, Player** player_root, int* instances) {
+int vvg_make_map(Master* master) {
 
+  int top_x = 0, top_y = 0;
   int x, y, players = 0;
   char *p = NULL;
 
@@ -53,143 +54,137 @@ int vvg_make_map(char** map_buffer, Cap** cap_root, Player** player_root, int* i
   srand(time(0));
 
   /* Create a node to serve as root for all free caps: */
-  if (vvl_cap_init(cap_root) == 1) return 1;
+  if (vvl_cap_init(&(*master).cap_root) == 1) return 1;
 
   /* Create a node to server as root for all players: */
-  if (vvl_player_init(player_root) == 1) return 1;
+  if (vvl_player_init(&(*master).player_root) == 1) return 1;
   
   /* Iterate through the map:
      # becomes a Cap (game tile) and goes into a cap_root linked list
      @ becomes a player and goes into player_root linked list */
 
-  for(p = map_buffer[0], x = 0, y = 0; *p != '\0' ; p++, x++) {
+  for(p = (*master).map_buffer, x = 0, y = 0; *p != '\0' ; p++, x++) {
     if (*p == '\n') {
       y++;
       x = -1;
       
     } else if (*p == '#') {
-      (*instances)++;
-      vvl_cap_add(cap_root, x, y, rand() % 6 + 1);
+      (*master).instances++;
+      vvl_cap_add(&(*master).cap_root, x, y, rand() % 6 + 1);
+
+      if (x > top_x) top_x = x;
+      if (y > top_y) top_y = y;
       
     } else if (*p == '@') {
-      (*instances)++;
-      vvl_player_add(player_root, ++players, x, y);
+      (*master).instances++;
+      vvl_player_add(&(*master).player_root, ++players, x, y);
+
+      if (x > top_x) top_x = x;
+      if (y > top_y) top_y = y;
     }
   }
 
   /* Free map_buffer: */
-  free(*map_buffer);
-  *map_buffer = NULL;
+  free((*master).map_buffer);
+  (*master).map_buffer = NULL;
 
+  if (top_x >= 50 || top_y >= 30) {
+    fprintf(stderr, "Map is too big! \n\
+Please don't make it wider than 50 runes in a row or higher than 30\n");
+    return 2;
+  }
   return 0;
 }
 
-void vvg_free_map(Cap** cap_root, Player** player_root) {
+void vvg_free_map(Master* master) {
 
-  vvl_cap_exit(cap_root);
-  vvl_player_exit(player_root);
+  vvl_cap_exit(&(*master).cap_root);
+  vvl_player_exit(&(*master).player_root);
 
 }
 
-int vvg_play_game(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                  Cap** cap_root, Player** player_root, int instances) {
+int vvg_play_game(Master* master) {
+
   int status = 0;
   SDL_Event event;
-  Player* curr_pl = NULL;
 
-  vvx_draw_all_caps(stdscr, imgscr, cap_root, player_root);
-  SDL_Flip(*stdscr);
+  vvx_draw_all_caps(master);
+  SDL_Flip((*master).stdscr);
 
   for (;;) {
-    for (curr_pl = (*player_root)->next; curr_pl != NULL; curr_pl = curr_pl->next) {
-      if (curr_pl->is_player)
+    for ((*master).current_player = (*master).player_root->next;
+         (*master).current_player != NULL;
+         (*master).current_player = (*master).current_player->next) {
+
+      if ((*master).current_player->is_player)
         do
-          switch (status = vvg_event_human(stdscr, imgscr, cap_root, player_root, &event)) {
+          switch (status = vvg_event_human(master, &event)) {
             case 2: /* Fall through */
-            case 1: SDL_Flip(*stdscr); break;
+            case 1: SDL_Flip((*master).stdscr); break;
             case -1: return 0; break;
           }
         while (status != 2);
+
       else {
-        vvg_event_ai(stdscr, imgscr, cap_root, player_root, &curr_pl);
-        SDL_Flip(*stdscr);
+        vvg_event_ai(master);
+        SDL_Flip((*master).stdscr);
       }
     }
-    vvg_sanity_check(cap_root, player_root, instances);
+    vvg_sanity_check(master);
   }
   
   return 0;
 }
 
-int vvg_event_human(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                    Cap** cap_root, Player** player_root, SDL_Event* event) {
+int vvg_event_human(Master* master, SDL_Event* event) {
 
-  Player *pl_ptr = (*player_root)->next;
-  Player *pl_aux = NULL;
-  
   while (SDL_WaitEvent(event)) {
     if (event->type == SDL_KEYDOWN) {
       switch (event->key.keysym.sym) {
-        case SDLK_1: {
-          vvg_find_caps_by_color(stdscr, imgscr, cap_root, player_root, &pl_ptr, 1, 1);
-          return 1; break;
-        }
-        case SDLK_2: {
-          vvg_find_caps_by_color(stdscr, imgscr, cap_root, player_root, &pl_ptr, 2, 1);
-          return 1; break;
-        }
-        case SDLK_3: {
-          vvg_find_caps_by_color(stdscr, imgscr, cap_root, player_root, &pl_ptr, 3, 1);
-          return 1; break;
-        }
-        case SDLK_4: {
-          vvg_find_caps_by_color(stdscr, imgscr, cap_root, player_root, &pl_ptr, 4, 1);
-          return 1; break;
-        }
-        case SDLK_5: {
-          vvg_find_caps_by_color(stdscr, imgscr, cap_root, player_root, &pl_ptr, 5, 1);
-          return 1; break;
-        }
-        case SDLK_6: {
-          vvg_find_caps_by_color(stdscr, imgscr, cap_root, player_root, &pl_ptr, 6, 1);
-          return 1; break;
-        }
-        case SDLK_0: {
-          vvx_hide_hoverlist(stdscr, imgscr, &pl_ptr);
-          vvg_free_hoverlist(cap_root, &pl_ptr);
-          return 1; break;
-        }
-        case SDLK_RETURN: {
-
-          for (pl_aux = pl_ptr->next; pl_aux != NULL; pl_aux = pl_aux->next)
-            if (pl_ptr->hover_color == pl_aux->color) {
-              return 0; break;
-            }
-          if (vvg_capture_hovercaps(&pl_ptr) == 1) {
-            return 0; break;
-          }
-          vvx_draw_capture(stdscr, imgscr, &pl_ptr);
-          return 2; break;
-        }
+        case SDLK_1: vvg_find_caps_by_color(master, 1, 1); return 1; break;
+        case SDLK_2: vvg_find_caps_by_color(master, 2, 1); return 1; break;
+        case SDLK_3: vvg_find_caps_by_color(master, 3, 1); return 1; break;
+        case SDLK_4: vvg_find_caps_by_color(master, 4, 1); return 1; break;
+        case SDLK_5: vvg_find_caps_by_color(master, 5, 1); return 1; break;
+        case SDLK_6: vvg_find_caps_by_color(master, 6, 1); return 1; break;
+        case SDLK_0: vvx_hide_hoverlist(master); vvg_free_hoverlist(master); return 1; break;
+        case SDLK_RETURN: return vvg_event_human_capture(master); break;
         case SDLK_ESCAPE: return -1; break;
         default: continue; break;
       }
     }
     else if (event->type == SDL_MOUSEMOTION) {}
-    else if (event->type == SDL_MOUSEBUTTONDOWN) {}
+    else if (event->type == SDL_MOUSEBUTTONDOWN)
+      return vvg_event_human_capture(master);
     else return 0;
   }
   return 0;
 }
 
-int vvg_event_ai(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                 Cap** cap_root, Player** player_root, Player** player) {
+int vvg_event_human_capture(Master* master) {
+
+  Player *pl_p = NULL;
+  
+  for (pl_p = (*master).player_root; pl_p != NULL; pl_p = pl_p->next)
+    if ((*master).current_player->hover_color == pl_p->color
+        && (*master).current_player != pl_p) {
+      return 0;
+    }
+  if (vvg_capture_hovercaps(&(*master).current_player) == 1) {
+    return 0;
+  }
+  vvx_draw_capture(master);
+  return 2;
+
+}
+
+int vvg_event_ai(Master* master) {
 
   int top_c, top_s = 0;
   int curr_c, curr_s;
   
   for (curr_c = 1; curr_c <= 6; curr_c++) {
-    curr_s = vvg_find_caps_by_color(stdscr, imgscr, cap_root, player_root, player, curr_c, 0);
+    curr_s = vvg_find_caps_by_color(master, curr_c, 0);
     if (curr_s > top_s) {
       top_s = curr_s;
       top_c = curr_c;
@@ -201,26 +196,24 @@ int vvg_event_ai(SDL_Surface** stdscr, SDL_Surface** imgscr,
     return 0;
   }
 
-  vvg_find_caps_by_color(stdscr, imgscr, cap_root, player_root, player, top_c, 0);
-  vvg_capture_hovercaps(player);
-  vvx_draw_capture(stdscr, imgscr, player);
+  vvg_find_caps_by_color(master, top_c, 0);
+  vvg_capture_hovercaps(&(*master).current_player);
+  vvx_draw_capture(master);
   
   return 0;
 }
 
-int vvg_find_caps_by_color(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                           Cap** cap_root, Player** player_root, Player** player,
-                           int color, int xupdate) {
+int vvg_find_caps_by_color(Master* master, int color, int xupdate) {
 
   int found_caps;
   
   if (xupdate)
-    vvx_hide_hoverlist(stdscr, imgscr, player);
+    vvx_hide_hoverlist(master);
 
-  (*player)->hover_color = color;
-  found_caps = vvg_find_nearby_caps(cap_root, player_root, player);
+  (*master).current_player->hover_color = color;
+  found_caps = vvg_find_nearby_caps(master);
   if (xupdate)
-    vvx_draw_hoverlist(stdscr, imgscr, player, found_caps);
+    vvx_draw_hoverlist(master, found_caps);
 
   if (found_caps < 0) {
     fprintf(stderr, "vvg_find_caps_by_color: vvg_find_nearby_caps return -1!\n");
@@ -229,7 +222,7 @@ int vvg_find_caps_by_color(SDL_Surface** stdscr, SDL_Surface** imgscr,
   return found_caps;
 }
 
-int vvg_find_nearby_caps(Cap** cap_root, Player** player_root, Player** player) {
+int vvg_find_nearby_caps(Master* master) {
 
   Player *pl_ptr = NULL;
   
@@ -240,19 +233,20 @@ int vvg_find_nearby_caps(Cap** cap_root, Player** player_root, Player** player) 
   Cap *cl_ptr = NULL;  /* Iteration */
   Cap *hl_ptr = NULL;  /* List of hovercaps */
 
-  for (pl_ptr = (*player_root)->next; pl_ptr != NULL; pl_ptr = pl_ptr->next) {
-    if (pl_ptr->color == (*player)->hover_color && pl_ptr != (*player)) {
+  for (pl_ptr = (*master).player_root->next; pl_ptr != NULL; pl_ptr = pl_ptr->next) {
+    if (pl_ptr->color == (*master).current_player->hover_color
+        && pl_ptr != (*master).current_player) {
       is_colorblocked = 1;
       break;
     }
   }
   
-  pl_ptr = (*player);
+  pl_ptr = (*master).current_player;
 
-  vvg_free_hoverlist(cap_root, &pl_ptr);
+  vvg_free_hoverlist(master);
 
   /* Find caps that are close to player's caps: */
-  for (cap_ptr = (*cap_root)->next; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
+  for (cap_ptr = (*master).cap_root->next; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
     if (cap_ptr->color == pl_ptr->hover_color) {
       
       curr_caps = found_caps;
@@ -266,10 +260,10 @@ int vvg_find_nearby_caps(Cap** cap_root, Player** player_root, Player** player) 
 
           found_caps++;
 
-          if (cap_ptr != (*cap_root)->next) hl_ptr = cap_ptr->prev;
-          else hl_ptr = cap_root[0];
+          if (cap_ptr != (*master).cap_root->next) hl_ptr = cap_ptr->prev;
+          else hl_ptr = (*master).cap_root;
           
-          if (vvl_cap_move(cap_root, &pl_ptr->hover_list, cap_ptr) == 1)
+          if (vvl_cap_move(&(*master).cap_root, &pl_ptr->hover_list, cap_ptr) == 1)
             return -1;
           cap_ptr = hl_ptr;
           
@@ -283,7 +277,7 @@ int vvg_find_nearby_caps(Cap** cap_root, Player** player_root, Player** player) 
     return 0;
 
   /* If there are any, find caps that are close to the found caps: */
-  for (cap_ptr = (*cap_root)->next; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
+  for (cap_ptr = (*master).cap_root->next; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
     if (cap_ptr->color == pl_ptr->hover_color) {
 
       curr_caps = found_caps;
@@ -297,12 +291,12 @@ int vvg_find_nearby_caps(Cap** cap_root, Player** player_root, Player** player) 
 
           found_caps++;
           
-          if (cap_ptr != (*cap_root)->next) hl_ptr = cap_ptr->prev;
-          else hl_ptr = cap_root[0];
+          if (cap_ptr != (*master).cap_root->next) hl_ptr = cap_ptr->prev;
+          else hl_ptr = (*master).cap_root;
           
-          if (vvl_cap_move(cap_root, &pl_ptr->hover_list, cap_ptr) == 1)
+          if (vvl_cap_move(&(*master).cap_root, &pl_ptr->hover_list, cap_ptr) == 1)
             return -1;
-          cap_ptr = (*cap_root)->next;
+          cap_ptr = (*master).cap_root->next;
 
         }
         cl_ptr = cl_ptr->next;
@@ -316,12 +310,12 @@ int vvg_find_nearby_caps(Cap** cap_root, Player** player_root, Player** player) 
     return 0;
 }
 
-void vvg_free_hoverlist(Cap** cap_root, Player** player) {
+void vvg_free_hoverlist(Master* master) {
 
-  if ((*player)->hover_list->next == NULL)
+  if ((*master).current_player->hover_list->next == NULL)
     return;
 
-  vvl_cap_move_all(&(*player)->hover_list, cap_root);
+  vvl_cap_move_all(&(*master).current_player->hover_list, &(*master).cap_root);
 }
   
 int vvg_capture_hovercaps(Player** player) {
@@ -336,31 +330,25 @@ int vvg_capture_hovercaps(Player** player) {
   return 0;
 }
 
-int vvg_sanity_check(Cap** cap_root, Player** player_root, int instances) {
+int vvg_sanity_check(Master* master) {
 
-  int curr_cap = 0;
-  int curr_cl = 0;
-  int curr_hl = 0;
-  int curr_inst = 0;
+  int ccap = 0, ccl = 0, chl = 0, cinst = 0;
   Cap *cap_ptr = NULL;
   Player *pl_ptr = NULL;
 
-  for (cap_ptr = (*cap_root)->next; cap_ptr != NULL; cap_ptr = cap_ptr->next)
-    curr_cap++;
-  for (pl_ptr = (*player_root)->next; pl_ptr != NULL; pl_ptr = pl_ptr->next) {
-    for (cap_ptr = pl_ptr->cap_list->next; cap_ptr != NULL; cap_ptr = cap_ptr->next)
-      curr_cl++;
-    for (cap_ptr = pl_ptr->hover_list->next; cap_ptr != NULL; cap_ptr = cap_ptr->next)
-      curr_hl++;
+  for (cap_ptr = (*master).cap_root->next; cap_ptr != NULL; cap_ptr = cap_ptr->next, ccap++);
+  for (pl_ptr = (*master).player_root->next; pl_ptr != NULL; pl_ptr = pl_ptr->next) {
+    for (cap_ptr = pl_ptr->cap_list->next; cap_ptr != NULL; cap_ptr = cap_ptr->next, ccl++);
+    for (cap_ptr = pl_ptr->hover_list->next; cap_ptr != NULL; cap_ptr = cap_ptr->next, chl++);
   }
 
-  curr_inst = curr_cap + curr_cl + curr_hl;
+  cinst = ccap + ccl + chl;
 
-  if (!(curr_inst == instances)) {
+  if (!(cinst == (*master).instances)) {
     fprintf(stderr, "Missing instances! Was %d, is %d (%d-%d-%d)\n",
-            instances, curr_inst, curr_cap, curr_cl, curr_hl);
+            (*master).instances, cinst, ccap, ccl, chl);
 
-    for (pl_ptr = (*player_root)->next; pl_ptr != NULL; pl_ptr = pl_ptr->next) {
+    for (pl_ptr = (*master).player_root->next; pl_ptr != NULL; pl_ptr = pl_ptr->next) {
       fprintf(stderr, "Player!\n");
       for (cap_ptr = pl_ptr->cap_list->next; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
         fprintf(stderr, "\t%d-%d", cap_ptr->x, cap_ptr->y);

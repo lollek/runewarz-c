@@ -16,22 +16,22 @@
 #include "vvg_game.h"
 
 int main(void) {
-  SDL_Surface *stdscr = NULL, *imgscr = NULL;
-  int instances = 0;
-  char *map_buffer = NULL;
-  Cap *cap_root = NULL;
-  Player *player_root = NULL;
 
-  if (vvx_init(&stdscr, &imgscr) == 1) return 1;
+  Master master;
+  int status;
   
-
-  if (vvg_load_mapfile("map2_2", &map_buffer) == 1) return 1;
-  if (vvg_make_map(&map_buffer, &cap_root, &player_root, &instances) == 1) return 1;
-
-  vvg_play_game(&stdscr, &imgscr, &cap_root, &player_root, instances);
+  memset(&master, 0, sizeof(master));
   
+  if (vvg_load_mapfile(&master, "map1_2") == 1) return 1;
   
-  vvg_free_map(&cap_root, &player_root);
-  vvx_exit(&imgscr);
+  status = vvg_make_map(&master);
+  if (status == 1) return 1;
+  else if (status == 0) {
+    if (vvx_init(&master) == 1) return 1;
+    vvg_play_game(&master);
+  }
+  
+  vvg_free_map(&master);
+  vvx_exit(&master);
   return 0;
 }

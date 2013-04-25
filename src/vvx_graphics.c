@@ -1,25 +1,25 @@
 #include "vvx_graphics.h"
 
-int vvx_init(SDL_Surface** stdscr, SDL_Surface** imgscr) {
-
+int vvx_init(Master* master) {
+  
   SDL_Surface *imgscr_temp;
-
+  
   if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
     fprintf(stderr, "Failed to init sdl\n");
     return 1;
   }
-
-  *stdscr = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
-  if (*stdscr == NULL) {
+  
+  (*master).stdscr = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
+  if ((*master).stdscr == NULL) {
     fprintf(stderr, "Failed to set videomode\n");
     return 1;
   }
-
+  
   if ((imgscr_temp = IMG_Load("img/tiles.png")) == NULL) {
     fprintf(stderr, "Failed to load img/tiles.png\n");
     return 1;
   }
-  if ( (*imgscr = SDL_DisplayFormat(imgscr_temp)) == NULL) {
+  if (((*master).imgscr = SDL_DisplayFormat(imgscr_temp)) == NULL) {
     fprintf(stderr, "Failed to format img/tiles.png\n");
     return 1;
   }
@@ -31,8 +31,8 @@ int vvx_init(SDL_Surface** stdscr, SDL_Surface** imgscr) {
 
 }
 
-void vvx_exit(SDL_Surface** imgscr) {
-  SDL_FreeSurface(*imgscr);
+void vvx_exit(Master* master) {
+  SDL_FreeSurface((*master).imgscr);
   SDL_Quit();
 }
 
@@ -98,11 +98,10 @@ void vvk_render_box_absolute(SDL_Surface** target_surface,
   SDL_FreeSurface(temp_surf);
 }
 
-void vvx_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                       Cap** cap_root, Player** player_root) {
+void vvx_draw_all_caps(Master* master) {
 
-  Cap *cap_ptr = (*cap_root)->next;
-  Player *player_ptr = (*player_root)->next;
+  Cap *cap_ptr = (*master).cap_root->next;
+  Player *player_ptr = (*master).player_root->next;
   Cap *cap_list_ptr = NULL;
 
   SDL_Rect source, target;
@@ -117,7 +116,7 @@ void vvx_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
     target.x = cap_ptr->x*TILESIZE;
     target.y = cap_ptr->y*TILESIZE;
 
-    SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
+    SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
     cap_ptr = cap_ptr->next;
   }
 
@@ -132,68 +131,69 @@ void vvx_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
       target.x = cap_list_ptr->x*TILESIZE;
       target.y = cap_list_ptr->y*TILESIZE;
 
-      SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
+      SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
       cap_list_ptr = cap_list_ptr->next;
     }
     player_ptr = player_ptr->next;
   }
 }
-void vvx_draw_capture(SDL_Surface** stdscr, SDL_Surface** imgscr, Player** player) {
+void vvx_draw_capture(Master* master) {
   
   Cap *cap_p = NULL;
 
   SDL_Rect source, target;
-  source.x = (*player)->color*TILESIZE;
-  source.y = SYMBOL_OFFSET + (*player)->symbol*TILESIZE;
+  source.x = (*master).current_player->color*TILESIZE;
+  source.y = SYMBOL_OFFSET + (*master).current_player->symbol*TILESIZE;
   source.w = TILESIZE; source.h = TILESIZE;
   target.w = TILESIZE; target.h = TILESIZE;
 
-  for (cap_p = (*player)->cap_list->next; cap_p != NULL; cap_p = cap_p->next) {
+  for (cap_p = (*master).current_player->cap_list->next; cap_p != NULL; cap_p = cap_p->next) {
     target.x = cap_p->x*TILESIZE;
     target.y = cap_p->y*TILESIZE;
 
-    SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
+    SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
   }
 }
 
-void vvx_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr, Player** player, int pad) {
+void vvx_draw_hoverlist(Master* master, int pad) {
   
   Cap *cap_p = NULL;
+
   SDL_Rect source, target;
-  source.x = (*player)->hover_color*TILESIZE;
-  if (pad) source.y = SYMBOL_OFFSET + (*player)->symbol*TILESIZE;
+  source.x = (*master).current_player->hover_color*TILESIZE;
+  if (pad) source.y = SYMBOL_OFFSET + (*master).current_player->symbol*TILESIZE;
   else source.y = TILESIZE;
   source.w = TILESIZE; source.h = TILESIZE;
   target.w = TILESIZE; target.h = TILESIZE;
 
-  if ((*player)->hover_list->next == NULL)
+  if ((*master).current_player->hover_list->next == NULL)
     return;
 
-  for (cap_p = (*player)->hover_list->next; cap_p != NULL; cap_p = cap_p->next) {
+  for (cap_p = (*master).current_player->hover_list->next; cap_p != NULL; cap_p = cap_p->next){
     target.x = cap_p->x*TILESIZE;
     target.y = cap_p->y*TILESIZE;
 
-    SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
+    SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
   }
 }
 
-void vvx_hide_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr, Player** player) {
+void vvx_hide_hoverlist(Master* master) {
 
   Cap *cap_p = NULL;
   SDL_Rect source, target;
-  source.x = (*player)->hover_color*TILESIZE;
+  source.x = (*master).current_player->hover_color*TILESIZE;
   source.y = 0;
   source.w = TILESIZE; source.h = TILESIZE;
   target.w = TILESIZE; target.h = TILESIZE;
 
-  if ((*player)->hover_list->next == NULL)
+  if ((*master).current_player->hover_list->next == NULL)
     return;
 
-  for (cap_p = (*player)->hover_list->next; cap_p != NULL; cap_p = cap_p->next) {
+  for (cap_p = (*master).current_player->hover_list->next; cap_p != NULL; cap_p = cap_p->next){
     
     target.x = cap_p->x*TILESIZE;
     target.y = cap_p->y*TILESIZE;
 
-    SDL_BlitSurface(*imgscr, &source, *stdscr, &target);
+    SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
   }
 }

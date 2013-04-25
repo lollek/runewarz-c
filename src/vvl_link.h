@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "SDL/SDL.h"
+
 typedef struct Cap {
   
   int x;
@@ -27,6 +29,24 @@ typedef struct Player {
   struct Player *next;
   
 } Player;
+
+typedef struct Master {
+
+  SDL_Surface *stdscr;
+  SDL_Surface *imgscr;
+
+  Player *player_root;
+  Player *current_player;
+
+  Cap *cap_root;
+
+  char *map_buffer;
+  
+  int instances;
+  int map_width;
+  int map_height;
+  
+} Master;
 
 int vvl_cap_init(Cap** cap_node);
 void vvl_cap_exit(Cap** cap_node);
