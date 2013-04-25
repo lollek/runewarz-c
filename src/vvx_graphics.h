@@ -15,10 +15,11 @@
 #define TILESIZE 15
 #define SYMBOL_OFFSET 30
 
-#define CAPTION "RuneWarz v0.1.1"
+#define CAPTION "RuneWarz v0.1.2"
 
 int vvx_init(SDL_Surface** stdscr, SDL_Surface** imgscr);
 void vvx_exit(SDL_Surface** imgscr);
+
 void vvk_render_text_centered(SDL_Surface** target_surface, TTF_Font** font, const char text[],
                               SDL_Color text_color, int offset_x, int offset_y);
 void vvk_render_text_absolute(SDL_Surface** target_surface, TTF_Font** font, const char text[],
@@ -27,12 +28,10 @@ void vvk_render_box_centered(SDL_Surface** target_surface,
                              int offset_x, int offset_y, int width, int height);
 void vvk_render_box_absolute(SDL_Surface** target_surface,
                              int offset_x, int offset_y, int width, int height);
-void vvk_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
+
+void vvx_draw_all_caps(SDL_Surface** stdscr, SDL_Surface** imgscr,
                        Cap** cap_root, Player** player_root);
-void vvk_draw_capture(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                      Player** player_root);
-void vvk_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                        Player** player_root);
-void vvk_draw_hoverlist_blank(SDL_Surface** stdscr, SDL_Surface** imgscr,
-                              Player** player_root);
+void vvx_draw_capture(SDL_Surface** stdscr, SDL_Surface** imgscr, Player** player);
+void vvx_draw_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr, Player** player, int pad);
+void vvx_hide_hoverlist(SDL_Surface** stdscr, SDL_Surface** imgscr, Player** player);
 #endif
