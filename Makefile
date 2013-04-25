@@ -1,6 +1,6 @@
 CC = cc
 CFLAGS= -lSDL -lSDL_ttf -lSDL_image -Wall -Wextra -ansi -pedantic
-SOURCE = src/main.c src/vvk_graphics.c src/vvk_game.c
+SOURCE = src/main.c src/vvl_link.c src/vvx_graphics.c src/vvg_game.c 
 EXE = -o runewarz
 
 all:	$(SOURCE)
