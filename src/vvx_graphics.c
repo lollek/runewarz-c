@@ -1,10 +1,5 @@
 #include "vvx_graphics.h"
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
-#define TILESIZE 15
-#define SYMBOL_OFFSET 30
-
 int vvx_init(SDL_Surface** stdscr, SDL_Surface** imgscr) {
 
   SDL_Surface *imgscr_temp;

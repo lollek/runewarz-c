@@ -13,8 +13,9 @@
 #define SCREEN_HEIGHT 600
 #define SCREEN_BPP 32
 #define TILESIZE 15
+#define SYMBOL_OFFSET 30
 
-#define CAPTION "RuneWarz v0.1"
+#define CAPTION "RuneWarz v0.1.1"
 
 int vvx_init(SDL_Surface** stdscr, SDL_Surface** imgscr);
 void vvx_exit(SDL_Surface** imgscr);

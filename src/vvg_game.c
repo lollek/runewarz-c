@@ -1,9 +1,5 @@
 #include "vvg_game.h"
 
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
-#define TILESIZE 15
-
 int vvg_get_filesize(FILE* fp) {
   int sz, prev;
 
@@ -207,6 +203,7 @@ void vvg_find_nearby_caps(Cap** cap_root, Player** player_root) {
   Player *pl_ptr = (*player_root)->next;
   
   int found_caps = 0;
+  int curr_caps;
   Cap *cap_ptr = NULL; /* List of free caps */
   Cap *cl_ptr = NULL;  /* Iteration */
   Cap *hl_ptr = NULL;  /* List of hovercaps */
@@ -216,19 +213,27 @@ void vvg_find_nearby_caps(Cap** cap_root, Player** player_root) {
   /* Find caps that are close to player's caps: */
   for (cap_ptr = (*cap_root)->next; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
     if (cap_ptr->color == pl_ptr->hover_color) {
-      for (cl_ptr = pl_ptr->cap_list->next; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+      
+      curr_caps = found_caps;
+      cl_ptr = pl_ptr->cap_list->next;
+
+      while (cl_ptr != NULL && curr_caps == found_caps) {
         if ((cap_ptr->y == cl_ptr->y
              && (cap_ptr->x == cl_ptr->x-1 || cap_ptr->x == cl_ptr->x+1)) ||
             (cap_ptr->x == cl_ptr->x
              && (cap_ptr->y == cl_ptr->y-1 || cap_ptr->y == cl_ptr->y+1))) {
 
           found_caps++;
-          
-          if (cap_ptr != cap_root[0]) hl_ptr = cap_ptr->prev;
+
+          if (cap_ptr != (*cap_root)->next) hl_ptr = cap_ptr->prev;
           else hl_ptr = cap_root[0];
-          vvl_cap_move(cap_root, &pl_ptr->hover_list, cap_ptr);
+          
+          if (vvl_cap_move(cap_root, &pl_ptr->hover_list, cap_ptr) == 1)
+            return;
           cap_ptr = hl_ptr;
+          
         }
+        cl_ptr = cl_ptr->next;
       }
     }
   }
@@ -241,7 +246,11 @@ void vvg_find_nearby_caps(Cap** cap_root, Player** player_root) {
   /* If there are any, find caps that are close to the found caps: */
   for (cap_ptr = (*cap_root)->next; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
     if (cap_ptr->color == pl_ptr->hover_color) {
-      for (cl_ptr = pl_ptr->hover_list->next; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+
+      curr_caps = found_caps;
+      cl_ptr = pl_ptr->hover_list->next;
+
+      while (cl_ptr != NULL && curr_caps == found_caps) {
         if ((cap_ptr->y == cl_ptr->y
              && (cap_ptr->x == cl_ptr->x-1 || cap_ptr->x == cl_ptr->x+1)) ||
             (cap_ptr->x == cl_ptr->x
@@ -249,138 +258,42 @@ void vvg_find_nearby_caps(Cap** cap_root, Player** player_root) {
 
           found_caps++;
           
-          if (cap_ptr != cap_root[0]) hl_ptr = cap_ptr->prev;
+          if (cap_ptr != (*cap_root)->next) hl_ptr = cap_ptr->prev;
           else hl_ptr = cap_root[0];
-          vvl_cap_move(cap_root, &pl_ptr->hover_list, cap_ptr);
-          cap_ptr = hl_ptr;
+          
+          if (vvl_cap_move(cap_root, &pl_ptr->hover_list, cap_ptr) == 1)
+            return;
+          cap_ptr = (*cap_root)->next;
+
         }
+        cl_ptr = cl_ptr->next;
       }
     }
   }
 
   printf("%d caps found\n", found_caps);
 
-  /* Bug check: check if any in the hoverlist are the wrong color: */
-  for (cap_ptr = pl_ptr->hover_list->next; cap_ptr != NULL; cap_ptr = cap_ptr->next)
-    if (cap_ptr->color != pl_ptr->hover_color) {
-      fprintf(stderr, "%d,%d cap is the wrong color\n", cap_ptr->x, cap_ptr->y);
-    }
-  
-  /*
-  hl_ptr = pl_ptr->hover_list;
-  cap_ptr = (*cap_root)->next;
-  while (cap_ptr != NULL) {
-    if (cap_ptr->color == pl_ptr->hover_color) {
-      for (cl_ptr = pl_ptr->cap_list->next; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
-        if ((cap_ptr->y == cl_ptr->y
-             && (cap_ptr->x == cl_ptr->x-1 || cap_ptr->x == cl_ptr->x+1)) ||
-            (cap_ptr->x == cl_ptr->x
-             && (cap_ptr->y == cl_ptr->y-1 || cap_ptr->y == cl_ptr->y+1))) {
-
-          found_caps++;
-
-          hl_ptr->next = cap_ptr;
-          if (cap_ptr->prev->next != NULL)
-            cap_ptr->prev->next = cap_ptr->next;
-          if (cap_ptr->next != NULL)
-            cap_ptr->next->prev = cap_ptr->prev;
-
-          if (cap_ptr->prev->next != NULL)
-            cap_ptr = cap_ptr->prev;
-          else
-            cap_ptr = cap_root[0];
-          
-          hl_ptr->next->prev = hl_ptr;
-          hl_ptr->next->next = NULL;
-          hl_ptr = hl_ptr->next;
-        }
-      }
-    }
-    fprintf(stderr, "_");
-    cap_ptr = cap_ptr->next;
-    } 
-
-
-  cap_ptr = (*cap_root)->next;
-  while (cap_ptr != NULL) {
-    if (cap_ptr->color == pl_ptr->hover_color) {
-      for (cl_ptr = pl_ptr->hover_list->next; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
-        if ((cap_ptr->y == cl_ptr->y
-             && (cap_ptr->x == cl_ptr->x-1 || cap_ptr->x == cl_ptr->x+1))
-            ||
-            (cap_ptr->x == cl_ptr->x
-             && (cap_ptr->y == cl_ptr->y-1 || cap_ptr->y == cl_ptr->y+1))) {
-
-          found_caps++;
-
-          hl_ptr->next = cap_ptr;
-
-          if (cap_ptr->prev->next != NULL)
-            cap_ptr->prev->next = cap_ptr->next;
-          if (cap_ptr->next != NULL)
-            cap_ptr->next->prev = cap_ptr->prev;
-
-          if (cap_ptr->prev->next != NULL)
-            cap_ptr = cap_ptr->prev;
-          else
-            cap_ptr = cap_root[0];
-          
-          hl_ptr->next->prev = hl_ptr;
-          hl_ptr->next->next = NULL;
-          hl_ptr = hl_ptr->next;
-        }
-      }
-    }
-    fprintf(stderr, "-");
-    cap_ptr = cap_ptr->next;
-  }
-  
-  pl_ptr->hover_list->next->prev = hl_ptr;
-  */
 }
 
 void vvg_free_hoverlist(Cap** cap_root, Player** player_root) {
 
   Player *pl_ptr = (*player_root)->next;
-  Cap *cl_ptr = NULL;
-  Cap *hl_ptr = NULL;
-
   if (pl_ptr->hover_list->next == NULL)
     return;
 
-  for (cl_ptr = (*cap_root)->next; cl_ptr->next != NULL; cl_ptr = cl_ptr->next);
-  hl_ptr = pl_ptr->hover_list->next;
-  
-  cl_ptr->next = hl_ptr;
-  hl_ptr->prev = cl_ptr;
-  pl_ptr->hover_list->next = NULL;
-
-  while (cl_ptr->next != NULL) cl_ptr = cl_ptr->next;
-  (*cap_root)->next->prev = cl_ptr;
-  
+  vvl_cap_move_all(&pl_ptr->hover_list, cap_root);
 }
   
 int vvg_capture_hovercaps(Cap** cap_root, Player** player_root) {
 
   Player *pl_ptr = (*player_root)->next;
-  Cap *cl_ptr = NULL;
-  Cap *hl_ptr = NULL;
 
   if (pl_ptr->hover_list->next == NULL)
     return 1;
 
-  for (cl_ptr = pl_ptr->cap_list->next; cl_ptr->next != NULL; cl_ptr = cl_ptr->next);
-  
-  hl_ptr = pl_ptr->hover_list->next;
-  cl_ptr->next = hl_ptr;
-  hl_ptr->prev = cl_ptr;
-
-  while (cl_ptr->next != NULL) cl_ptr = cl_ptr->next;
-  pl_ptr->cap_list->next->prev = cl_ptr;
-
+  vvl_cap_move_all(&pl_ptr->hover_list, &pl_ptr->cap_list);
   pl_ptr->color = pl_ptr->hover_color;
-
-  pl_ptr->hover_list->next = NULL;
+  pl_ptr->hover_color = 0;
 
   return 0;
 }

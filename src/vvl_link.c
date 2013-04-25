@@ -57,6 +57,36 @@ void vvl_cap_add(Cap** cap_node, int x, int y, int color) {
   cap_p->next = NULL;
 }
 
+int vvl_cap_move_all(Cap** node_from, Cap** node_to) {
+
+  Cap *cap_fp = NULL;
+  Cap *cap_tp = NULL;
+  
+  if (*node_from == NULL) {
+    fprintf(stderr, "vvl_cap_move_all: node_from is NULL!\n");
+    return 1;
+  } else if ((*node_from)->next == NULL) {
+    fprintf(stderr, "vvl_cap_move_all: refusing to move an empty list!\n");
+    return 1;
+  } else if (*node_to == NULL) {
+    fprintf(stderr, "vvl_cap_move_all: node_to is NULL!\n");
+    return 1;
+  } 
+
+  for (cap_tp = node_to[0]; cap_tp->next != NULL; cap_tp = cap_tp->next);
+  cap_fp = (*node_from)->next;
+
+  cap_tp->next = cap_fp;
+  if (cap_tp != node_to[0])
+    cap_fp->prev = cap_tp;
+  (*node_from)->next = NULL;
+
+  while (cap_tp->next != NULL) cap_tp = cap_tp->next;
+  (*node_to)->next->prev = cap_tp;
+
+  return 0;
+}
+
 int vvl_cap_move(Cap** node_from, Cap** node_to, Cap* cap) {
 
   Cap *cap_fp = NULL;
@@ -84,16 +114,24 @@ int vvl_cap_move(Cap** node_from, Cap** node_to, Cap* cap) {
   /* Find: */
   cap_tp->next = cap;
 
-  /* Unlink: */
-  cap->prev->next = cap->next;
-  if (cap->next != NULL)
-    cap->next->prev = cap->prev;
-  else if (cap == (*node_from)->next)
-    (*node_from)->next = NULL;
-  else
-    (*node_from)->next->prev = cap->prev;
+  /* Remove old link: */
+  if (cap->prev->next != NULL)
+    cap->prev->next = cap->next;
 
-  /* Re-link: */
+  if (cap->next != NULL) {
+    cap->next->prev = cap->prev;
+    if (cap == (*node_from)->next)
+      (*node_from)->next = cap->next;
+
+  } else {
+    if (cap == (*node_from)->next)
+      (*node_from)->next = NULL;
+    else
+      (*node_from)->next->prev = cap->prev;
+  }
+
+
+  /* Add new link: */
   cap->next = NULL;
   if (cap_tp != node_to[0]) {
     cap->prev = cap_tp;

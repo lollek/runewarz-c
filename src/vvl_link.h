@@ -31,6 +31,7 @@ typedef struct Player {
 int vvl_cap_init(Cap** cap_node);
 void vvl_cap_exit(Cap** cap_node);
 void vvl_cap_add(Cap** cap_node, int x, int y, int color);
+int vvl_cap_move_all(Cap** node_from, Cap** node_to);
 int vvl_cap_move(Cap** node_from, Cap** node_to, Cap* cap);
 
 int vvl_player_init(Player** player_root);
