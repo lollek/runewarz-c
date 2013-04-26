@@ -22,7 +22,7 @@ int main(void) {
   
   memset(&master, 0, sizeof(master));
   
-  if (vvg_load_mapfile(&master, "map2_4") == 1) return 1;
+  if (vvg_load_mapfile(&master, "map1_4") == 1) return 1;
   
   status = vvg_make_map(&master);
   if (status == 1) return 1;

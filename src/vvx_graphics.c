@@ -104,9 +104,8 @@ void vvx_draw_all_caps(Master* master) {
   Player *player_ptr = (*master).player_root->next;
   Cap *cap_list_ptr = NULL;
 
-  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2;
+  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2 - TILESIZE/2;
   int offset_y = 20;
-  int scoreboard_y = 400;
   int scoreboard_x = offset_x;
 
   SDL_Rect source, target;
@@ -133,7 +132,7 @@ void vvx_draw_all_caps(Master* master) {
     source.y = player_ptr->symbol*TILESIZE + SYMBOL_OFFSET;
 
     target.x = scoreboard_x; scoreboard_x += TILESIZE;
-    target.y = scoreboard_y + player_ptr->symbol*20;
+    target.y = (*master).map_height*TILESIZE + offset_y*2 + player_ptr->symbol*20;
     SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
     
     while (cap_list_ptr != NULL) {
@@ -145,7 +144,7 @@ void vvx_draw_all_caps(Master* master) {
 
       source.w = 1;
       target.x = scoreboard_x; scoreboard_x += 1;
-      target.y = scoreboard_y + player_ptr->symbol*20;
+      target.y = (*master).map_height*TILESIZE + offset_y*2 + player_ptr->symbol*20;
       SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
       
       cap_list_ptr = cap_list_ptr->next;
@@ -160,9 +159,8 @@ void vvx_draw_capture(Master* master) {
   
   Cap *cap_p = NULL;
 
-  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2;
+  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2 - TILESIZE/2;
   int offset_y = 20;
-  int scoreboard_y = 400;
   int scoreboard_x = offset_x;
 
   SDL_Rect source, target;
@@ -171,7 +169,7 @@ void vvx_draw_capture(Master* master) {
   source.w = TILESIZE; source.h = TILESIZE;
 
   target.x = scoreboard_x; scoreboard_x += 15;
-  target.y = scoreboard_y + (*master).current_player->symbol*20;
+  target.y = (*master).map_height*TILESIZE + offset_y*2 + (*master).current_player->symbol*20;
   SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
 
   for (cap_p = (*master).current_player->cap_list->next; cap_p != NULL; cap_p = cap_p->next) {
@@ -183,7 +181,8 @@ void vvx_draw_capture(Master* master) {
 
     source.w = 1;
     target.x = scoreboard_x; scoreboard_x += 1;
-    target.y = scoreboard_y + (*master).current_player->symbol*20;
+    target.y = (*master).map_height*TILESIZE + offset_y*2 +
+      (*master).current_player->symbol*20;
     SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
   }
 }
@@ -192,7 +191,7 @@ void vvx_draw_hoverlist(Master* master, int pad) {
   
   Cap *cap_p = NULL;
 
-  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2;
+  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2 - TILESIZE/2;
   int offset_y = 20;
 
   SDL_Rect source, target;
@@ -217,7 +216,7 @@ void vvx_hide_hoverlist(Master* master) {
 
   Cap *cap_p = NULL;
 
-  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2;
+  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2 - TILESIZE/2;
   int offset_y = 20;
 
   SDL_Rect source, target;
