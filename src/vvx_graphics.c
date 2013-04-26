@@ -104,8 +104,8 @@ void vvx_draw_all_caps(Master* master) {
   Player *player_ptr = (*master).player_root->next;
   Cap *cap_list_ptr = NULL;
 
-  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2 - TILESIZE/2;
-  int offset_y = 20;
+  int offset_x = (*master).map_offset_x;
+  int offset_y = (*master).map_offset_y;
   int scoreboard_x = offset_x;
 
   SDL_Rect source, target;
@@ -159,8 +159,8 @@ void vvx_draw_capture(Master* master) {
   
   Cap *cap_p = NULL;
 
-  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2 - TILESIZE/2;
-  int offset_y = 20;
+  int offset_x = (*master).map_offset_x;
+  int offset_y = (*master).map_offset_y;
   int scoreboard_x = offset_x;
 
   SDL_Rect source, target;
@@ -191,8 +191,8 @@ void vvx_draw_hoverlist(Master* master, int pad) {
   
   Cap *cap_p = NULL;
 
-  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2 - TILESIZE/2;
-  int offset_y = 20;
+  int offset_x = (*master).map_offset_x;
+  int offset_y = (*master).map_offset_y;
 
   SDL_Rect source, target;
   source.x = (*master).current_player->hover_color*TILESIZE;
@@ -216,8 +216,8 @@ void vvx_hide_hoverlist(Master* master) {
 
   Cap *cap_p = NULL;
 
-  int offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2 - TILESIZE/2;
-  int offset_y = 20;
+  int offset_x = (*master).map_offset_x;
+  int offset_y = (*master).map_offset_y;
 
   SDL_Rect source, target;
   source.x = (*master).current_player->hover_color*TILESIZE;

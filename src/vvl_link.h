@@ -46,6 +46,10 @@ typedef struct Master {
   int instances;
   int map_width;
   int map_height;
+  int map_offset_x;
+  int map_offset_y;
+  int mousecap_x;
+  int mousecap_y;
   
 } Master;
 

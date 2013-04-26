@@ -91,7 +91,14 @@ int vvg_make_map(Master* master) {
     fprintf(stderr, "Map is too big! \n\
 Please don't make it wider than 50 runes in a row or higher than 30\n");
     return 2;
+  } else if ((*master).players > 4) {
+    fprintf(stderr, "More than 4 players is now allowed on a map\n");
+    return 2;
   }
+
+  (*master).map_offset_x = (SCREEN_WIDTH - ((*master).map_width*TILESIZE))/2 - TILESIZE/2;
+  (*master).map_offset_y = 20;
+  
   return 0;
 }
 
@@ -157,6 +164,8 @@ int vvg_play_game(Master* master) {
 
 int vvg_event_human(Master* master, SDL_Event* event) {
 
+  int mouse_cap_x, mouse_cap_y;
+  
   while (SDL_WaitEvent(event)) {
     if (event->type == SDL_KEYDOWN) {
       switch (event->key.keysym.sym) {
@@ -172,7 +181,22 @@ int vvg_event_human(Master* master, SDL_Event* event) {
         default: continue; break;
       }
     }
-    else if (event->type == SDL_MOUSEMOTION) {}
+    else if (event->type == SDL_MOUSEMOTION) {
+      if (event->motion.x >= (*master).map_offset_x
+          && event->motion.x <= (*master).map_offset_x + ((*master).map_width+1)*TILESIZE
+          && event->motion.y >= (*master).map_offset_y
+          && event->motion.y <= (*master).map_offset_y + ((*master).map_height+1)*TILESIZE) {
+
+        mouse_cap_x = (event->motion.x - (*master).map_offset_x) / TILESIZE;
+        mouse_cap_y = (event->motion.y - (*master).map_offset_y) / TILESIZE;
+
+        if (mouse_cap_x != (*master).mousecap_x || mouse_cap_y != (*master).mousecap_y) {
+          (*master).mousecap_x = mouse_cap_x;
+          (*master).mousecap_y = mouse_cap_y;
+          return (!vvg_event_human_mouse_new_focus(master));
+        }
+      }
+    }
     else if (event->type == SDL_MOUSEBUTTONDOWN)
       return vvg_event_human_capture(master);
     else return 0;
@@ -195,6 +219,18 @@ int vvg_event_human_capture(Master* master) {
   vvx_draw_capture(master);
   return 2;
 
+}
+
+int vvg_event_human_mouse_new_focus(Master* master) {
+
+  Cap *cap_p = NULL;
+  
+  for (cap_p = (*master).cap_root->next; cap_p != NULL; cap_p = cap_p->next)
+    if (cap_p->x == (*master).mousecap_x && cap_p->y == (*master).mousecap_y) {
+      vvg_find_caps_by_color(master, cap_p->color, 1);
+      return 0;
+    }
+  return 1;
 }
 
 int vvg_event_ai(Master* master, int check_only) {

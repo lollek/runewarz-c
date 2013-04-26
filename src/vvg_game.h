@@ -10,6 +10,10 @@
 #include "vvl_link.h"
 #include "vvx_graphics.h"
 
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define TILESIZE 15
+
 int vvg_get_filesize(FILE* fp);
 int vvg_load_mapfile(Master* master, const char* mapname);
 int vvg_make_map(Master* master);
@@ -18,6 +22,7 @@ void vvg_free_map(Master* master);
 int vvg_play_game(Master* master);
 int vvg_event_human(Master* master, SDL_Event* event);
 int vvg_event_human_capture(Master* master);
+int vvg_event_human_mouse_new_focus(Master* master);
 int vvg_event_ai(Master* master, int check_only);
 
 int vvg_find_caps_by_color(Master* master, int color, int xupdate);
