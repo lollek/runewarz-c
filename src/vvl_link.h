@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "SDL/SDL.h"
+#include "SDL/SDL_ttf.h"
 
 typedef struct Cap {
   
@@ -39,6 +40,8 @@ typedef struct Master {
   Player *current_player;
 
   Cap *cap_root;
+
+  TTF_Font *font;
 
   char *map_buffer;
   

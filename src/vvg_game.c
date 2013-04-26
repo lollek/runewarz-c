@@ -27,6 +27,7 @@ int vvg_load_mapfile(Master* master, const char* mapname) {
   fd = fopen(fullpath, "r");
   if (fd == NULL) {
     fprintf(stderr, "Failed to open file: %s\n", fullpath);
+    free(fullpath);
     return 1;
   }
 

@@ -9,8 +9,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "SDL/SDL.h"
-
 #include "vvl_link.h"
 #include "vvx_graphics.h"
 #include "vvg_game.h"
@@ -22,10 +20,9 @@ int main(void) {
   
   memset(&master, 0, sizeof(master));
   
-  if (vvg_load_mapfile(&master, "map1_2") == 1) return 1;
+  if (vvg_load_mapfile(&master, "map2_2") == 1) return 1;
   
-  status = vvg_make_map(&master);
-  if (status == 1) return 1;
+  if ((status = vvg_make_map(&master)) == 1) return 1;
   else if (status == 0) {
     if (vvx_init(&master) == 1) return 1;
     vvg_play_game(&master);

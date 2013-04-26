@@ -5,8 +5,6 @@
 #include <string.h>
 #include <time.h>
 
-#include "SDL/SDL.h"
-
 #include "vvl_link.h"
 #include "vvx_graphics.h"
 

@@ -1,28 +1,39 @@
 #include "vvx_graphics.h"
 
 int vvx_init(Master* master) {
-  
+
   SDL_Surface *imgscr_temp;
   
   if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
-    fprintf(stderr, "Failed to init sdl\n");
+    fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
+    return 1;
+  }
+
+  if (TTF_Init() == -1) {
+    fprintf(stderr, "Failed to initialize TTF: %s\n", TTF_GetError());
     return 1;
   }
   
   (*master).stdscr = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
   if ((*master).stdscr == NULL) {
-    fprintf(stderr, "Failed to set videomode\n");
+    fprintf(stderr, "Failed to create main SDL surface: %s\n", SDL_GetError());
     return 1;
   }
   
   if ((imgscr_temp = IMG_Load("img/tiles.png")) == NULL) {
-    fprintf(stderr, "Failed to load img/tiles.png\n");
+    fprintf(stderr, "Failed to load tiles for SDL: %s\n", SDL_GetError());
     return 1;
   }
   if (((*master).imgscr = SDL_DisplayFormat(imgscr_temp)) == NULL) {
-    fprintf(stderr, "Failed to format img/tiles.png\n");
+    fprintf(stderr, "Failed to format tiles for SDL: %s\n", SDL_GetError());
     return 1;
   }
+
+  if (((*master).font = TTF_OpenFont("img/freemonobold.ttf", 16)) == NULL) {
+    fprintf(stderr, "Failed to load TTF font: %s\n", TTF_GetError());
+    return 1;
+  }
+  
   SDL_FreeSurface(imgscr_temp);
 
   SDL_WM_SetCaption(CAPTION, CAPTION);
@@ -32,10 +43,57 @@ int vvx_init(Master* master) {
 }
 
 void vvx_exit(Master* master) {
+  TTF_CloseFont((*master).font);
   SDL_FreeSurface((*master).imgscr);
+  TTF_Quit();
   SDL_Quit();
 }
 
+
+void vvx_draw_text(Master* master, const char text[], int x, int y, int is_c, int clr) {
+
+  SDL_Color text_color = { 0, 0, 0, 0};
+  const SDL_Color bg_color = { 0, 0, 0, 0 };
+  SDL_Surface *text_surface = NULL;
+  SDL_Rect text_rect;
+
+  if (clr == 1) /* Blue */ {
+    text_color.b = 255;
+  } else if (clr == 2) /* Green */ {
+    text_color.g = 255;
+  } else if (clr == 3) /* Orange*/ {
+    text_color.r = 255;
+    text_color.g = 127;
+  } else if (clr == 4) /* Pink */ {
+    text_color.r = 255;
+    text_color.g = 192;
+    text_color.b = 203;
+  } else if (clr == 5) /* Grey */ {
+    text_color.r = 128;
+    text_color.g = 128;
+    text_color.b = 128;
+  } else if (clr == 6) /* Red */ {
+    text_color.r = 255;
+  } else if (clr == 7) /* Olive */ {
+    text_color.r = 128;
+    text_color.g = 128;
+  } else if (clr == 8) /* Cyan */ {
+    text_color.g = 255;
+    text_color.b = 255;
+  }
+    
+  text_surface = TTF_RenderText_Shaded((*master).font, text, text_color, bg_color);
+
+  if (is_c) text_rect.x = x - text_surface->w/2;
+  else text_rect.x = x;
+  text_rect.y = y;
+
+  SDL_BlitSurface(text_surface, NULL, (*master).stdscr, &text_rect);
+  SDL_FreeSurface(text_surface);
+  
+}
+
+/*
 void vvk_render_text_centered(SDL_Surface** target_surface, TTF_Font** font, const char text[],
                               SDL_Color text_color, int offset_x, int offset_y) {
   SDL_Surface *text_surf = NULL;
@@ -97,6 +155,7 @@ void vvk_render_box_absolute(SDL_Surface** target_surface,
 
   SDL_FreeSurface(temp_surf);
 }
+*/
 
 void vvx_draw_all_caps(Master* master) {
 
@@ -107,6 +166,8 @@ void vvx_draw_all_caps(Master* master) {
   int offset_x = (*master).map_offset_x;
   int offset_y = (*master).map_offset_y;
   int scoreboard_x = offset_x;
+  int cap_counter = 0;
+  char cap_counter_str[4];
 
   SDL_Rect source, target;
   source.w = TILESIZE; source.h = TILESIZE;
@@ -137,6 +198,8 @@ void vvx_draw_all_caps(Master* master) {
     
     while (cap_list_ptr != NULL) {
 
+      cap_counter++;
+      
       source.w = TILESIZE;
       target.x = cap_list_ptr->x*TILESIZE + offset_x;
       target.y = cap_list_ptr->y*TILESIZE + offset_y;
@@ -150,6 +213,9 @@ void vvx_draw_all_caps(Master* master) {
       cap_list_ptr = cap_list_ptr->next;
     }
 
+    sprintf(cap_counter_str, "%d", cap_counter);
+    vvx_draw_text(master, cap_counter_str, offset_x - 20, target.y, 1, player_ptr->color);
+
     scoreboard_x = offset_x;
     player_ptr = player_ptr->next;
   }
@@ -162,6 +228,8 @@ void vvx_draw_capture(Master* master) {
   int offset_x = (*master).map_offset_x;
   int offset_y = (*master).map_offset_y;
   int scoreboard_x = offset_x;
+  int cap_counter = 0;
+  char cap_counter_str[4];
 
   SDL_Rect source, target;
   source.x = (*master).current_player->color*TILESIZE;
@@ -174,6 +242,8 @@ void vvx_draw_capture(Master* master) {
 
   for (cap_p = (*master).current_player->cap_list->next; cap_p != NULL; cap_p = cap_p->next) {
 
+    cap_counter++;
+    
     source.w = TILESIZE;
     target.x = cap_p->x*TILESIZE + offset_x;
     target.y = cap_p->y*TILESIZE + offset_y;
@@ -185,6 +255,12 @@ void vvx_draw_capture(Master* master) {
       (*master).current_player->symbol*20;
     SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
   }
+
+
+  sprintf(cap_counter_str, "%d", cap_counter);
+  vvx_draw_text(master, cap_counter_str, offset_x - 20, target.y, 1,
+                (*master).current_player->color);
+
 }
 
 void vvx_draw_hoverlist(Master* master, int pad) {
