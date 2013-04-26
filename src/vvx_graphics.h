@@ -13,9 +13,9 @@
 #define SCREEN_HEIGHT 600
 #define SCREEN_BPP 32
 #define TILESIZE 15
-#define SYMBOL_OFFSET 30
+#define SYMBOL_OFFSET 15
 
-#define CAPTION "RuneWarz v0.1.2b"
+#define CAPTION "RuneWarz v0.1.2c"
 
 int vvx_init(Master* master);
 void vvx_exit(Master* master);

@@ -46,7 +46,6 @@ int vvg_load_mapfile(Master* master, const char* mapname) {
 
 int vvg_make_map(Master* master) {
 
-  int top_x = 0, top_y = 0;
   int x, y, players = 0;
   char *p = NULL;
 
@@ -72,15 +71,15 @@ int vvg_make_map(Master* master) {
       (*master).instances++;
       vvl_cap_add(&(*master).cap_root, x, y, rand() % 6 + 1);
 
-      if (x > top_x) top_x = x;
-      if (y > top_y) top_y = y;
+      if (x > (*master).map_width) (*master).map_width = x;
+      if (y > (*master).map_height) (*master).map_height = y;
       
     } else if (*p == '@') {
       (*master).instances++;
       vvl_player_add(&(*master).player_root, ++players, x, y);
 
-      if (x > top_x) top_x = x;
-      if (y > top_y) top_y = y;
+      if (x > (*master).map_width) (*master).map_width = x;
+      if (y > (*master).map_height) (*master).map_height = y;
     }
   }
 
@@ -88,7 +87,7 @@ int vvg_make_map(Master* master) {
   free((*master).map_buffer);
   (*master).map_buffer = NULL;
 
-  if (top_x >= 50 || top_y >= 30) {
+  if ((*master).map_width >= 50 || (*master).map_height >= 30) {
     fprintf(stderr, "Map is too big! \n\
 Please don't make it wider than 50 runes in a row or higher than 30\n");
     return 2;
