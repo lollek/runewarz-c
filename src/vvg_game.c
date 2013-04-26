@@ -92,7 +92,7 @@ int vvg_make_map(Master* master) {
 Please don't make it wider than 50 runes in a row or higher than 30\n");
     return 2;
   } else if ((*master).players > 4) {
-    fprintf(stderr, "More than 4 players is now allowed on a map\n");
+    fprintf(stderr, "More than 4 players is not allowed on a map\n");
     return 2;
   }
 
@@ -150,11 +150,11 @@ int vvg_play_game(Master* master) {
     
     /* If everyone is stuck: */
     if (stuck_players == (*master).players) {
-      printf("Game over! Press enter to close game\n");
+      printf("Game over! Press escape to close game\n");
       for (;;)
         while (SDL_WaitEvent(&event))
           if (event.type == SDL_KEYDOWN)
-            if (event.key.keysym.sym == SDLK_RETURN)
+            if (event.key.keysym.sym == SDLK_ESCAPE)
               return 0;
     }
   }
@@ -224,12 +224,23 @@ int vvg_event_human_capture(Master* master) {
 int vvg_event_human_mouse_new_focus(Master* master) {
 
   Cap *cap_p = NULL;
+  Cap *cap_p2 = NULL;
   
   for (cap_p = (*master).cap_root->next; cap_p != NULL; cap_p = cap_p->next)
-    if (cap_p->x == (*master).mousecap_x && cap_p->y == (*master).mousecap_y) {
-      vvg_find_caps_by_color(master, cap_p->color, 1);
-      return 0;
-    }
+    if (cap_p->x == (*master).mousecap_x && cap_p->y == (*master).mousecap_y)
+      for (cap_p2 = (*master).current_player->cap_list; cap_p2 != NULL; cap_p2 = cap_p2->next)
+        if ((cap_p2->x == cap_p->x
+             && (cap_p2->y == cap_p->y-1 || cap_p2->y == cap_p->y+1)) ||
+            (cap_p2->y == cap_p->y
+             && (cap_p2->x == cap_p->x-1 || cap_p2->x == cap_p->x+1))) {
+          vvg_find_caps_by_color(master, cap_p->color, 1);
+          return 0;
+        }
+  if ((*master).current_player->hover_list != NULL) {
+    vvx_hide_hoverlist(master);
+    vvg_free_hoverlist(master);
+    return 0;
+  }
   return 1;
 }
 
