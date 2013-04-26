@@ -42,6 +42,7 @@ typedef struct Master {
 
   char *map_buffer;
   
+  int players;
   int instances;
   int map_width;
   int map_height;

@@ -46,7 +46,7 @@ int vvg_load_mapfile(Master* master, const char* mapname) {
 
 int vvg_make_map(Master* master) {
 
-  int x, y, players = 0;
+  int x, y;
   char *p = NULL;
 
   /* Start srand for randomizer */
@@ -76,7 +76,7 @@ int vvg_make_map(Master* master) {
       
     } else if (*p == '@') {
       (*master).instances++;
-      vvl_player_add(&(*master).player_root, ++players, x, y);
+      vvl_player_add(&(*master).player_root, ++(*master).players, x, y);
 
       if (x > (*master).map_width) (*master).map_width = x;
       if (y > (*master).map_height) (*master).map_height = y;
@@ -105,16 +105,24 @@ void vvg_free_map(Master* master) {
 int vvg_play_game(Master* master) {
 
   int status = 0;
+  int stuck_players;
   SDL_Event event;
 
   vvx_draw_all_caps(master);
   SDL_Flip((*master).stdscr);
 
   for (;;) {
+    stuck_players = 0;
     for ((*master).current_player = (*master).player_root->next;
          (*master).current_player != NULL;
          (*master).current_player = (*master).current_player->next) {
 
+      /* Skips the player in case he is stuck: */
+      if (vvg_event_ai(master, 1)) {
+        stuck_players++;
+        continue;
+      }
+      
       if ((*master).current_player->is_player)
         do
           switch (status = vvg_event_human(master, &event)) {
@@ -125,11 +133,23 @@ int vvg_play_game(Master* master) {
         while (status != 2);
 
       else {
-        vvg_event_ai(master);
+        vvg_event_ai(master, 0);
         SDL_Flip((*master).stdscr);
       }
     }
     vvg_sanity_check(master);
+
+
+    
+    /* If everyone is stuck: */
+    if (stuck_players == (*master).players) {
+      printf("Game over! Press enter to close game\n");
+      for (;;)
+        while (SDL_WaitEvent(&event))
+          if (event.type == SDL_KEYDOWN)
+            if (event.key.keysym.sym == SDLK_RETURN)
+              return 0;
+    }
   }
   
   return 0;
@@ -177,7 +197,7 @@ int vvg_event_human_capture(Master* master) {
 
 }
 
-int vvg_event_ai(Master* master) {
+int vvg_event_ai(Master* master, int check_only) {
 
   int top_c, top_s = 0;
   int curr_c, curr_s;
@@ -190,10 +210,10 @@ int vvg_event_ai(Master* master) {
     }
   }
   
-  if (top_s == 0) {
-    printf("I'm stuck :( //AI\n");
+  if (top_s == 0)
+    return 1;
+  else if (check_only)
     return 0;
-  }
 
   vvg_find_caps_by_color(master, top_c, 0);
   vvg_capture_hovercaps(&(*master).current_player);

@@ -15,7 +15,7 @@
 #define TILESIZE 15
 #define SYMBOL_OFFSET 15
 
-#define CAPTION "RuneWarz v0.1.2c"
+#define CAPTION "RuneWarz v0.1.2d"
 
 int vvx_init(Master* master);
 void vvx_exit(Master* master);
