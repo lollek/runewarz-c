@@ -14,8 +14,8 @@ int vvx_init(Master* master) {
     return 1;
   }
   
-  (*master).stdscr = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
-  if ((*master).stdscr == NULL) {
+  master->stdscr = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
+  if (master->stdscr == NULL) {
     fprintf(stderr, "Failed to create main SDL surface: %s\n", SDL_GetError());
     return 1;
   }
@@ -24,12 +24,12 @@ int vvx_init(Master* master) {
     fprintf(stderr, "Failed to load tiles for SDL: %s\n", SDL_GetError());
     return 1;
   }
-  if (((*master).imgscr = SDL_DisplayFormat(imgscr_temp)) == NULL) {
+  if ((master->imgscr = SDL_DisplayFormat(imgscr_temp)) == NULL) {
     fprintf(stderr, "Failed to format tiles for SDL: %s\n", SDL_GetError());
     return 1;
   }
 
-  if (((*master).font = TTF_OpenFont("img/freemonobold.ttf", 16)) == NULL) {
+  if ((master->font = TTF_OpenFont("img/freemonobold.ttf", TILESIZE)) == NULL) {
     fprintf(stderr, "Failed to load TTF font: %s\n", TTF_GetError());
     return 1;
   }
@@ -43,8 +43,8 @@ int vvx_init(Master* master) {
 }
 
 void vvx_exit(Master* master) {
-  TTF_CloseFont((*master).font);
-  SDL_FreeSurface((*master).imgscr);
+  TTF_CloseFont(master->font);
+  SDL_FreeSurface(master->imgscr);
   TTF_Quit();
   SDL_Quit();
 }
@@ -82,13 +82,13 @@ void vvx_draw_text(Master* master, const char text[], int x, int y, int is_c, in
     text_color.b = 255;
   }
     
-  text_surface = TTF_RenderText_Shaded((*master).font, text, text_color, bg_color);
+  text_surface = TTF_RenderText_Shaded(master->font, text, text_color, bg_color);
 
   if (is_c) text_rect.x = x - text_surface->w/2;
   else text_rect.x = x;
   text_rect.y = y;
 
-  SDL_BlitSurface(text_surface, NULL, (*master).stdscr, &text_rect);
+  SDL_BlitSurface(text_surface, NULL, master->stdscr, &text_rect);
   SDL_FreeSurface(text_surface);
   
 }
@@ -159,14 +159,12 @@ void vvk_render_box_absolute(SDL_Surface** target_surface,
 
 void vvx_draw_all_caps(Master* master) {
 
-  Cap *cap_ptr = (*master).cap_root->next;
-  Player *player_ptr = (*master).player_root->next;
+  Cap *cap_ptr = master->cap_root->next;
+  Player *player_ptr = master->player_root->next;
   Cap *cap_list_ptr = NULL;
 
-  int offset_x = (*master).map_offset_x;
-  int offset_y = (*master).map_offset_y;
-  int scoreboard_x = offset_x;
-  int cap_counter = 0;
+  unsigned short scoreboard_x = master->map_offset_x;
+  unsigned short cap_counter = 0;
   char cap_counter_str[4];
 
   SDL_Rect source, target;
@@ -177,9 +175,9 @@ void vvx_draw_all_caps(Master* master) {
     source.x = cap_ptr->color*TILESIZE;
     source.y = 0;
     
-    target.x = cap_ptr->x*TILESIZE + offset_x;
-    target.y = cap_ptr->y*TILESIZE + offset_y;
-    SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
+    target.x = cap_ptr->x*TILESIZE + master->map_offset_x;
+    target.y = cap_ptr->y*TILESIZE + master->map_offset_y;
+    SDL_BlitSurface(master->imgscr, &source, master->stdscr, &target);
     
     cap_ptr = cap_ptr->next;
   }
@@ -193,30 +191,30 @@ void vvx_draw_all_caps(Master* master) {
     source.y = player_ptr->symbol*TILESIZE + SYMBOL_OFFSET;
 
     target.x = scoreboard_x; scoreboard_x += TILESIZE;
-    target.y = (*master).map_height*TILESIZE + offset_y*2 + player_ptr->symbol*20;
-    SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
+    target.y = master->map_height*TILESIZE + master->map_offset_y*2 + player_ptr->symbol*20;
+    SDL_BlitSurface(master->imgscr, &source, master->stdscr, &target);
     
     while (cap_list_ptr != NULL) {
 
       cap_counter++;
       
       source.w = TILESIZE;
-      target.x = cap_list_ptr->x*TILESIZE + offset_x;
-      target.y = cap_list_ptr->y*TILESIZE + offset_y;
-      SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
+      target.x = cap_list_ptr->x*TILESIZE + master->map_offset_x;
+      target.y = cap_list_ptr->y*TILESIZE + master->map_offset_y;
+      SDL_BlitSurface(master->imgscr, &source, master->stdscr, &target);
 
       source.w = 1;
       target.x = scoreboard_x; scoreboard_x += 1;
-      target.y = (*master).map_height*TILESIZE + offset_y*2 + player_ptr->symbol*20;
-      SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
+      target.y = master->map_height*TILESIZE + master->map_offset_y*2 + player_ptr->symbol*20;
+      SDL_BlitSurface(master->imgscr, &source, master->stdscr, &target);
       
       cap_list_ptr = cap_list_ptr->next;
     }
 
     sprintf(cap_counter_str, "%d", cap_counter);
-    vvx_draw_text(master, cap_counter_str, offset_x - 20, target.y, 1, player_ptr->color);
+    vvx_draw_text(master, cap_counter_str, scoreboard_x, target.y, 0, player_ptr->color);
 
-    scoreboard_x = offset_x;
+    scoreboard_x = master->map_offset_x;
     player_ptr = player_ptr->next;
   }
 
@@ -225,41 +223,40 @@ void vvx_draw_capture(Master* master) {
   
   Cap *cap_p = NULL;
 
-  int offset_x = (*master).map_offset_x;
-  int offset_y = (*master).map_offset_y;
-  int scoreboard_x = offset_x;
-  int cap_counter = 0;
+  unsigned short scoreboard_x = master->map_offset_x;
+  unsigned short cap_counter = 0;
   char cap_counter_str[4];
 
   SDL_Rect source, target;
-  source.x = (*master).current_player->color*TILESIZE;
-  source.y = SYMBOL_OFFSET + (*master).current_player->symbol*TILESIZE;
+  source.x = master->current_player->color*TILESIZE;
+  source.y = SYMBOL_OFFSET + master->current_player->symbol*TILESIZE;
   source.w = TILESIZE; source.h = TILESIZE;
 
   target.x = scoreboard_x; scoreboard_x += 15;
-  target.y = (*master).map_height*TILESIZE + offset_y*2 + (*master).current_player->symbol*20;
-  SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
+  target.y = master->map_height*TILESIZE +
+    master->map_offset_y*2 + master->current_player->symbol*20;
+  SDL_BlitSurface(master->imgscr, &source, master->stdscr, &target);
 
-  for (cap_p = (*master).current_player->cap_list->next; cap_p != NULL; cap_p = cap_p->next) {
+  for (cap_p = master->current_player->cap_list->next; cap_p != NULL; cap_p = cap_p->next) {
 
     cap_counter++;
     
     source.w = TILESIZE;
-    target.x = cap_p->x*TILESIZE + offset_x;
-    target.y = cap_p->y*TILESIZE + offset_y;
-    SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
+    target.x = cap_p->x*TILESIZE + master->map_offset_x;
+    target.y = cap_p->y*TILESIZE + master->map_offset_y;
+    SDL_BlitSurface(master->imgscr, &source, master->stdscr, &target);
 
     source.w = 1;
     target.x = scoreboard_x; scoreboard_x += 1;
-    target.y = (*master).map_height*TILESIZE + offset_y*2 +
-      (*master).current_player->symbol*20;
-    SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
+    target.y = master->map_height*TILESIZE + master->map_offset_y*2 +
+      master->current_player->symbol*20;
+    SDL_BlitSurface(master->imgscr, &source, master->stdscr, &target);
   }
 
 
   sprintf(cap_counter_str, "%d", cap_counter);
-  vvx_draw_text(master, cap_counter_str, offset_x - 20, target.y, 1,
-                (*master).current_player->color);
+  vvx_draw_text(master, cap_counter_str, scoreboard_x, target.y, 0,
+                master->current_player->color);
 
 }
 
@@ -267,24 +264,21 @@ void vvx_draw_hoverlist(Master* master, int pad) {
   
   Cap *cap_p = NULL;
 
-  int offset_x = (*master).map_offset_x;
-  int offset_y = (*master).map_offset_y;
-
   SDL_Rect source, target;
-  source.x = (*master).current_player->hover_color*TILESIZE;
-  if (pad) source.y = SYMBOL_OFFSET + (*master).current_player->symbol*TILESIZE;
+  source.x = master->current_player->hover_color*TILESIZE;
+  if (pad) source.y = SYMBOL_OFFSET + master->current_player->symbol*TILESIZE;
   else source.y = TILESIZE;
   source.w = TILESIZE; source.h = TILESIZE;
   target.w = TILESIZE; target.h = TILESIZE;
 
-  if ((*master).current_player->hover_list->next == NULL)
+  if (master->current_player->hover_list->next == NULL)
     return;
 
-  for (cap_p = (*master).current_player->hover_list->next; cap_p != NULL; cap_p = cap_p->next){
-    target.x = cap_p->x*TILESIZE + offset_x;
-    target.y = cap_p->y*TILESIZE + offset_y;
+  for (cap_p = master->current_player->hover_list->next; cap_p != NULL; cap_p = cap_p->next){
+    target.x = cap_p->x*TILESIZE + master->map_offset_x;
+    target.y = cap_p->y*TILESIZE + master->map_offset_y;
 
-    SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
+    SDL_BlitSurface(master->imgscr, &source, master->stdscr, &target);
   }
 }
 
@@ -292,23 +286,20 @@ void vvx_hide_hoverlist(Master* master) {
 
   Cap *cap_p = NULL;
 
-  int offset_x = (*master).map_offset_x;
-  int offset_y = (*master).map_offset_y;
-
   SDL_Rect source, target;
-  source.x = (*master).current_player->hover_color*TILESIZE;
+  source.x = master->current_player->hover_color*TILESIZE;
   source.y = 0;
   source.w = TILESIZE; source.h = TILESIZE;
   target.w = TILESIZE; target.h = TILESIZE;
 
-  if ((*master).current_player->hover_list->next == NULL)
+  if (master->current_player->hover_list->next == NULL)
     return;
 
-  for (cap_p = (*master).current_player->hover_list->next; cap_p != NULL; cap_p = cap_p->next){
+  for (cap_p = master->current_player->hover_list->next; cap_p != NULL; cap_p = cap_p->next){
     
-    target.x = cap_p->x*TILESIZE + offset_x;
-    target.y = cap_p->y*TILESIZE + offset_y;
+    target.x = cap_p->x*TILESIZE + master->map_offset_x;
+    target.y = cap_p->y*TILESIZE + master->map_offset_y;
 
-    SDL_BlitSurface((*master).imgscr, &source, (*master).stdscr, &target);
+    SDL_BlitSurface(master->imgscr, &source, master->stdscr, &target);
   }
 }

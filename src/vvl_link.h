@@ -9,9 +9,9 @@
 
 typedef struct Cap {
   
-  int x;
-  int y;
-  int color;
+  unsigned char x;
+  unsigned char y;
+  unsigned char color;
 
   struct Cap *next;
   struct Cap *prev;
@@ -20,10 +20,10 @@ typedef struct Cap {
 
 typedef struct Player {
 
-  int symbol;
-  int color;
-  int is_player;
-  int hover_color;
+  unsigned char symbol;
+  unsigned char color;
+  unsigned char is_player;
+  unsigned char hover_color;
 
   struct Cap *hover_list;
   struct Cap *cap_list;
@@ -45,14 +45,14 @@ typedef struct Master {
 
   char *map_buffer;
   
-  int players;
-  int instances;
-  int map_width;
-  int map_height;
-  int map_offset_x;
-  int map_offset_y;
-  int mousecap_x;
-  int mousecap_y;
+  unsigned char players;
+  unsigned short instances;
+  unsigned char map_width;
+  unsigned char map_height;
+  unsigned short map_offset_x;
+  unsigned short map_offset_y;
+  unsigned short mousecap_x;
+  unsigned short mousecap_y;
   
 } Master;
 

@@ -16,7 +16,7 @@
 int main(void) {
 
   Master master;
-  int status;
+  char status;
   
   memset(&master, 0, sizeof(master));
   
