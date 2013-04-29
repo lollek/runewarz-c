@@ -3,15 +3,24 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <dirent.h>
+#include <unistd.h>
 
 #include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
 
+typedef struct Map {
+
+  char *name;
+  struct Map *next;
+
+} Map;
+
 typedef struct Cap {
   
-  unsigned char x;
-  unsigned char y;
-  unsigned char color;
+  char x;
+  char y;
+  char color;
 
   struct Cap *next;
   struct Cap *prev;
@@ -20,10 +29,10 @@ typedef struct Cap {
 
 typedef struct Player {
 
-  unsigned char symbol;
-  unsigned char color;
-  unsigned char is_player;
-  unsigned char hover_color;
+  char symbol;
+  char color;
+  char is_player;
+  char hover_color;
 
   struct Cap *hover_list;
   struct Cap *cap_list;
@@ -45,16 +54,20 @@ typedef struct Master {
 
   char *map_buffer;
   
-  unsigned char players;
-  unsigned short instances;
-  unsigned char map_width;
-  unsigned char map_height;
-  unsigned short map_offset_x;
-  unsigned short map_offset_y;
-  unsigned short mousecap_x;
-  unsigned short mousecap_y;
+  char players;
+  short instances;
+  char map_width;
+  char map_height;
+  short map_offset_x;
+  short map_offset_y;
+  short mousecap_x;
+  short mousecap_y;
   
 } Master;
+
+int vvl_map_add(Map* map_root);
+void vvl_map_sort(Map *map_root);
+void vvl_map_remove(Map* map_root);
 
 int vvl_cap_init(Cap** cap_node);
 void vvl_cap_exit(Cap** cap_node);

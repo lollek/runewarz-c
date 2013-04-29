@@ -1,5 +1,6 @@
 #include "vvg_game.h"
 
+/* Get size of a mapfile for malloc */
 int vvg_get_filesize(FILE* fp) {
   int size, start;
 
@@ -12,6 +13,7 @@ int vvg_get_filesize(FILE* fp) {
   return size;
 }
 
+/* Place a mapfile on heap */
 int vvg_load_mapfile(Master* master, const char* mapname) {
 
   FILE *fd = NULL;
@@ -45,10 +47,14 @@ int vvg_load_mapfile(Master* master, const char* mapname) {
   return 0;
 }
 
+/* Create a map from map_buffer */
 int vvg_make_map(Master* master) {
 
-  unsigned char x, y;
-  char *p = NULL;
+  char x, y, *p = NULL;
+  master->instances = 0;
+  master->players = 0;
+  master->map_width = 0;
+  master->map_height = 0;
 
   /* Start srand for randomizer */
   srand(time(0));
@@ -103,6 +109,7 @@ Please don't make it wider than 50 runes in a row or higher than 30\n");
   return 0;
 }
 
+/* Destroy a map */
 void vvg_free_map(Master* master) {
 
   vvl_cap_exit(&master->cap_root);

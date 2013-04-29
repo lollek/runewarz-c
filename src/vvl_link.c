@@ -1,5 +1,60 @@
 #include "vvl_link.h"
 
+/* Created a linklist from files in maps/-dir
+   Return the number of links if successfull, or -1 if not */
+int vvl_map_add(Map* map_root) {
+
+  DIR *DIR;
+  struct dirent *DIR_r;
+  Map *map = map_root;
+  int links = 0;
+
+  if (!(DIR = opendir("maps"))) {
+    fprintf(stderr, "Unable to open maps-folder\n");
+    return -1;
+  }
+
+  while ((DIR_r = readdir(DIR))) {
+    if (strcmp(DIR_r->d_name, ".") && strcmp(DIR_r->d_name, "..")) {
+      map->next = (Map *)malloc(sizeof(Map));
+      map = map->next;
+      map->name = (char *)malloc(strlen(DIR_r->d_name)+1);
+      strcpy(map->name, DIR_r->d_name);
+      map->next = NULL;
+    }
+  }
+  closedir(DIR);
+  vvl_map_sort(map_root);
+
+  for (map = map_root->next, links = 1; map != NULL; map = map->next, links++);
+  return links;
+}
+
+void vvl_map_sort(Map *map_root) {
+
+  Map *z = map_root, *p, *q;
+
+  while (z->next->next != NULL) {
+    q = z->next;
+    p = q->next;
+
+    if (strcmp(q->name, p->name) > 0) {
+      q->next = p->next;
+      z->next = p;
+      p->next = q;
+      z = map_root;
+    }
+    else
+      z = z->next;
+  }
+}
+
+void vvl_map_remove(Map* map_root) {
+
+  Map *map, *p;
+  for (map = map_root->next; map != NULL; p = map, map = map->next, free(p->name), free(p));
+}
+
 /* Create a linked cap-list from pointer: */
 int vvl_cap_init(Cap** cap_node) {
 
@@ -33,6 +88,7 @@ void vvl_cap_exit(Cap** cap_node) {
 
     free(cap_p2);
   }
+  *cap_node = NULL;
 }
 
 /* Create a new cap to a cap-list: */
@@ -178,6 +234,7 @@ void vvl_player_exit(Player** player_root) {
     vvl_cap_exit(&pl_p2->cap_list);
     free(pl_p2);
   }
+  *player_root = NULL;
 }
 
 /* Create a new player to a player-list: */
