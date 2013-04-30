@@ -288,7 +288,6 @@ int vvg_find_nearby_caps(Master* master) {
   }
   
   pl_ptr = master->current_player;
-
   vvg_free_hoverlist(master);
 
   /* Find caps that are close to player's caps: */
@@ -323,29 +322,25 @@ int vvg_find_nearby_caps(Master* master) {
     return 0;
 
   /* If there are any, find caps that are close to the found caps: */
-  for (cap_ptr = master->cap_root->next; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
-    if (cap_ptr->color == pl_ptr->hover_color) {
-
-      curr_caps = found_caps;
-      cl_ptr = pl_ptr->hover_list->next;
-
-      while (cl_ptr != NULL && curr_caps == found_caps) {
-        if ((cap_ptr->y == cl_ptr->y
-             && (cap_ptr->x == cl_ptr->x-1 || cap_ptr->x == cl_ptr->x+1)) ||
+  for (cl_ptr = pl_ptr->hover_list->next; cl_ptr != NULL; cl_ptr = cl_ptr->next) {
+    for (cap_ptr = master->cap_root->next; cap_ptr != NULL; cap_ptr = cap_ptr->next) {
+      if (cap_ptr->color == pl_ptr->hover_color && (
+            (cap_ptr->y == cl_ptr->y
+             && (cap_ptr->x == cl_ptr->x-1 || cap_ptr->x == cl_ptr->x+1))
+            ||
             (cap_ptr->x == cl_ptr->x
-             && (cap_ptr->y == cl_ptr->y-1 || cap_ptr->y == cl_ptr->y+1))) {
+             && (cap_ptr->y == cl_ptr->y-1 || cap_ptr->y == cl_ptr->y+1))
+            )) {
 
-          found_caps++;
-          
-          if (cap_ptr != master->cap_root->next) hl_ptr = cap_ptr->prev;
-          else hl_ptr = master->cap_root;
-          
-          if (vvl_cap_move(&master->cap_root, &pl_ptr->hover_list, cap_ptr) == 1)
-            return -1;
-          cap_ptr = master->cap_root->next;
+        found_caps++;
 
-        }
-        cl_ptr = cl_ptr->next;
+        if (cap_ptr != master->cap_root->next) hl_ptr = cap_ptr->prev;
+        else hl_ptr = master->cap_root;
+
+        if (vvl_cap_move(&master->cap_root, &pl_ptr->hover_list, cap_ptr) == 1)
+          return -1;
+        cap_ptr = hl_ptr;
+        
       }
     }
   }

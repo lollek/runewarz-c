@@ -45,7 +45,6 @@ int main(void) {
   memset(&map_root, 0, sizeof(map_root));
   if ( (avail_maps = vvl_map_add(&map_root)) == -1) return 1;
   vvx_draw_main_menu(&master, &map_root);
-  SDL_Flip(master.stdscr);
 
   for (loop = 1; loop;) {
     switch (main_event(&event, &selected_map)){
@@ -56,7 +55,7 @@ int main(void) {
         if (selected_map > avail_maps-1) selected_map = 1;
         else if (selected_map < 1) selected_map = avail_maps-1;
         vvx_update_main_menu(&master, &map_root, selected_map);
-        SDL_Flip(master.stdscr); break;
+        break;
       }
 
       case 3: {
@@ -73,7 +72,6 @@ int main(void) {
               vvg_free_map(&master);
               selected_map = 0;
               vvx_draw_main_menu(&master, &map_root);
-              SDL_Flip(master.stdscr);
             }
           }
         }

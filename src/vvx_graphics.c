@@ -64,24 +64,39 @@ void vvx_draw_main_menu(Master* master, Map* map_root) {
 
   vvx_draw_text(master, "Code by Olle K", master->stdscr->w/2, SCREEN_HEIGHT-45, 1, 3);
   vvx_draw_text(master, "Images by Sofie Aid", master->stdscr->w/2, SCREEN_HEIGHT-30, 1, 3);
+
+  SDL_Flip(master->stdscr);
 }
 
 /* Update parts of main menu */
 void vvx_update_main_menu(Master* master, Map* map_root, char highmap) {
 
   Map *map = NULL;
-  short map_y = SCREEN_HEIGHT/4;
-  char mapno;
+  unsigned short map_y = SCREEN_HEIGHT/4;
+  unsigned char mapno, longest_map_name = 0;
+  SDL_Rect rect;
+  
   
   /* Update Maps-part (e.g hover)*/
   if (map_root != NULL) {
     vvx_draw_text(master, "Maps:", master->stdscr->w/2, SCREEN_HEIGHT/4, 1, 4);
-    for (map = map_root->next, mapno = 1; map != NULL; map = map->next, mapno++)
+    for (map = map_root->next, mapno = 1; map != NULL; map = map->next, mapno++) {
+      map_y += 15;
+      if (strlen(map->name) > longest_map_name) longest_map_name = strlen(map->name);
       if (mapno == highmap)
-        vvx_draw_text(master, map->name, master->stdscr->w/2, (map_y += 15), 1, 2);
+        vvx_draw_text(master, map->name, master->stdscr->w/2, map_y, 1, 2);
       else
-        vvx_draw_text(master, map->name, master->stdscr->w/2, (map_y += 15), 1, 5);
+        vvx_draw_text(master, map->name, master->stdscr->w/2, map_y, 1, 5);
+    }
+    
+    rect.x = master->stdscr->w/2 - longest_map_name*TILESIZE/2;
+    rect.y = SCREEN_HEIGHT/4 - TILESIZE/2;
+    rect.w = longest_map_name*TILESIZE;
+    rect.h = map_y + TILESIZE*2 - SCREEN_HEIGHT/4;
+    
+    SDL_UpdateRect(master->stdscr, rect.x, rect.y, rect.w, rect.h);
   }
+  
 }
 
 void vvx_draw_text(Master* master, const char text[], int x, int y, int is_c, int clr) {
