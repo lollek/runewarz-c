@@ -204,14 +204,18 @@ int vvg_event_human_mouse_new_focus(Master* master) {
   
   for (cap_p = master->cap_root->next; cap_p != NULL; cap_p = cap_p->next)
     if (cap_p->x == master->mousecap_x && cap_p->y == master->mousecap_y)
-      for (cap_p2 = master->current_player->cap_list; cap_p2 != NULL; cap_p2 = cap_p2->next)
-        if ((cap_p2->x == cap_p->x
-             && (cap_p2->y == cap_p->y-1 || cap_p2->y == cap_p->y+1)) ||
-            (cap_p2->y == cap_p->y
-             && (cap_p2->x == cap_p->x-1 || cap_p2->x == cap_p->x+1))) {
-          vvg_find_caps_by_color(master, cap_p->color, 1);
-          return 0;
-        }
+      break;
+
+  if (cap_p != NULL) 
+    for (cap_p2 = master->current_player->cap_list; cap_p2 != NULL; cap_p2 = cap_p2->next)
+      if ((cap_p2->x == cap_p->x
+           && (cap_p2->y == cap_p->y-1 || cap_p2->y == cap_p->y+1)) ||
+          (cap_p2->y == cap_p->y
+           && (cap_p2->x == cap_p->x-1 || cap_p2->x == cap_p->x+1))) {
+        vvg_find_caps_by_color(master, cap_p->color, 1);
+        return 0;
+      }
+  
   if (master->current_player->hover_list != NULL) {
     vvx_hide_hoverlist(master);
     vvg_free_hoverlist(master);

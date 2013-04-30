@@ -54,6 +54,7 @@ typedef struct Master {
 
   char players;
   short instances;
+
   char map_width;
   char map_height;
   short map_offset_x;

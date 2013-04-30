@@ -44,7 +44,7 @@ int main(void) {
   /* Main Menu */
   memset(&map_root, 0, sizeof(map_root));
   if ( (avail_maps = vvl_map_add(&map_root)) == -1) return 1;
-  vvx_draw_main_menu(&master, &map_root, selected_map);
+  vvx_draw_main_menu(&master, &map_root);
   SDL_Flip(master.stdscr);
 
   for (loop = 1; loop;) {
@@ -55,7 +55,7 @@ int main(void) {
       case 2: {
         if (selected_map > avail_maps-1) selected_map = 1;
         else if (selected_map < 1) selected_map = avail_maps-1;
-        vvx_draw_main_menu(&master, &map_root, selected_map);
+        vvx_update_main_menu(&master, &map_root, selected_map);
         SDL_Flip(master.stdscr); break;
       }
 
@@ -71,7 +71,8 @@ int main(void) {
             else if (status == 0) {
               vvg_play_game(&master);
               vvg_free_map(&master);
-              vvx_draw_main_menu(&master, &map_root, selected_map);
+              selected_map = 0;
+              vvx_draw_main_menu(&master, &map_root);
               SDL_Flip(master.stdscr);
             }
           }

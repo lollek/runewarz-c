@@ -49,25 +49,39 @@ void vvx_exit(Master* master) {
   SDL_Quit();
 }
 
-void vvx_draw_main_menu(Master* master, Map* map_root, char highmap) {
+void vvx_draw_main_menu(Master* master, Map* map_root) {
 
   Map *map = NULL;
   short map_y = SCREEN_HEIGHT/4;
-  char mapno;
 
   SDL_FillRect(master->stdscr, NULL, SDL_MapRGB(master->stdscr->format, 0, 0, 0));
   
   vvx_draw_text(master, CAPTION, master->stdscr->w/2, 30, 1, 3);
 
   vvx_draw_text(master, "Maps:", master->stdscr->w/2, SCREEN_HEIGHT/4, 1, 4);
-  for (map = map_root->next, mapno = 1; map != NULL; map = map->next, mapno++)
-    if (mapno == highmap)
-      vvx_draw_text(master, map->name, master->stdscr->w/2, (map_y += 15), 1, 2);
-    else
+  for (map = map_root->next; map != NULL; map = map->next)
       vvx_draw_text(master, map->name, master->stdscr->w/2, (map_y += 15), 1, 5);
 
   vvx_draw_text(master, "Code by Olle K", master->stdscr->w/2, SCREEN_HEIGHT-45, 1, 3);
   vvx_draw_text(master, "Images by Sofie Aid", master->stdscr->w/2, SCREEN_HEIGHT-30, 1, 3);
+}
+
+/* Update parts of main menu */
+void vvx_update_main_menu(Master* master, Map* map_root, char highmap) {
+
+  Map *map = NULL;
+  short map_y = SCREEN_HEIGHT/4;
+  char mapno;
+  
+  /* Update Maps-part (e.g hover)*/
+  if (map_root != NULL) {
+    vvx_draw_text(master, "Maps:", master->stdscr->w/2, SCREEN_HEIGHT/4, 1, 4);
+    for (map = map_root->next, mapno = 1; map != NULL; map = map->next, mapno++)
+      if (mapno == highmap)
+        vvx_draw_text(master, map->name, master->stdscr->w/2, (map_y += 15), 1, 2);
+      else
+        vvx_draw_text(master, map->name, master->stdscr->w/2, (map_y += 15), 1, 5);
+  }
 }
 
 void vvx_draw_text(Master* master, const char text[], int x, int y, int is_c, int clr) {
