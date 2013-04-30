@@ -12,9 +12,7 @@
 #define SCREEN_HEIGHT 600
 #define TILESIZE 15
 
-int vvg_get_filesize(FILE* fp);
-int vvg_load_mapfile(Master* master, const char* mapname);
-int vvg_make_map(Master* master);
+int vvg_make_map(Master* master, const char* mapname);
 void vvg_free_map(Master* master);
 
 int vvg_play_game(Master* master);

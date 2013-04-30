@@ -1,56 +1,24 @@
 #include "vvg_game.h"
 
-/* Get size of a mapfile for malloc */
-int vvg_get_filesize(FILE* fp) {
-  int size, start;
-
-  start = ftell(fp);
-  fseek(fp, 0L, SEEK_END);
-
-  size = ftell(fp);
-  fseek(fp, start, SEEK_SET);
-
-  return size;
-}
-
-/* Place a mapfile on heap */
-int vvg_load_mapfile(Master* master, const char* mapname) {
+/* Create a map from file */
+int vvg_make_map(Master* master, const char* mapname) {
 
   FILE *fd = NULL;
   const char *prepath = "maps/";
   char *fullpath = (char *)malloc(strlen(mapname) + strlen(prepath) + 1);
-  char minibuf[256];
+  char x = 0, y = 0;
+  int p;
 
-  /* Combine mapname + prepath into a path: */
+  /* Open mapfile: */
   strcpy(fullpath, prepath);
   strcat(fullpath, mapname);
-
-  /* Open the file at location: */
   fd = fopen(fullpath, "r");
   if (fd == NULL) {
     fprintf(stderr, "Failed to open file: %s\n", fullpath);
     free(fullpath);
     return 1;
   }
-
-  /* Fetch the file into buf: */
-  master->map_buffer = (char *)malloc(sizeof(char)*vvg_get_filesize(fd));
   
-  fgets(minibuf, sizeof minibuf, fd);
-  strcpy(master->map_buffer, minibuf);
-  while ((fgets(minibuf, sizeof minibuf, fd)) != NULL)
-    strcat((*master).map_buffer, minibuf);
-
-  fclose(fd);
-  free(fullpath);
-  
-  return 0;
-}
-
-/* Create a map from map_buffer */
-int vvg_make_map(Master* master) {
-
-  char x, y, *p = NULL;
   master->instances = 0;
   master->players = 0;
   master->map_width = 0;
@@ -69,30 +37,30 @@ int vvg_make_map(Master* master) {
      # becomes a Cap (game tile) and goes into a cap_root linked list
      @ becomes a player and goes into player_root linked list */
 
-  for(p = master->map_buffer, x = 0, y = 0; *p != '\0' ; p++, x++) {
-    if (*p == '\n') {
+  while ((p = fgetc(fd)) != EOF) {
+    if (p == '\n') {
       y++;
       x = -1;
       
-    } else if (*p == '#') {
+    } else if (p == '#') {
       master->instances++;
       vvl_cap_add(&master->cap_root, x, y, rand() % 6 + 1);
 
       if (x > master->map_width) master->map_width = x;
       if (y > master->map_height) master->map_height = y;
       
-    } else if (*p == '@') {
+    } else if (p == '@') {
       master->instances++;
       vvl_player_add(&master->player_root, ++master->players, x, y);
 
       if (x > master->map_width) master->map_width = x;
       if (y > master->map_height) master->map_height = y;
     }
+    x++;
   }
 
-  /* Free map_buffer: */
-  free(master->map_buffer);
-  master->map_buffer = NULL;
+  fclose(fd);
+  free(fullpath);
 
   if (master->map_width >= 50 || master->map_height >= 30) {
     fprintf(stderr, "Map is too big! \n\

@@ -64,8 +64,10 @@ int main(void) {
           for (map_p = map_root.next;
                map_p != NULL && selected_map != 1;
                map_p = map_p->next, selected_map--);
-          if (map_p != NULL && vvg_load_mapfile(&master, map_p->name) != 1) {
-            if ((status = vvg_make_map(&master)) == 1) return 1;
+
+          if (map_p != NULL) {
+            status = vvg_make_map(&master, map_p->name);
+            if (status  == 1) return 1;
             else if (status == 0) {
               vvg_play_game(&master);
               vvg_free_map(&master);

@@ -52,8 +52,6 @@ typedef struct Master {
 
   TTF_Font *font;
 
-  char *map_buffer;
-  
   char players;
   short instances;
   char map_width;
