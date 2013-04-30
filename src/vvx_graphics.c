@@ -43,10 +43,16 @@ int vvx_init(Master* master) {
 }
 
 void vvx_exit(Master* master) {
+
   TTF_CloseFont(master->font);
+  master->font = NULL;
+  
   SDL_FreeSurface(master->imgscr);
+  master->imgscr = NULL;
+  
   TTF_Quit();
   SDL_Quit();
+  master->stdscr = NULL;
 }
 
 void vvx_draw_main_menu(Master* master, Map* map_root) {

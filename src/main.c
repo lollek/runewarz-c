@@ -33,27 +33,34 @@ int main(void) {
 
   Master master;
   Map map_root, *map_p;
+
   SDL_Event event;
-  char status, selected_map = 0;
+
+  char status;
+  char selected_map = 0;
   int loop, avail_maps;
 
-  /* Init */
+  /* Create master instance and init SDL: */
   memset(&master, 0, sizeof(master));
   if (vvx_init(&master) == 1) return 1;
 
-  /* Main Menu */
+  /* Fetch maps from maps/ and draw main menu */
   memset(&map_root, 0, sizeof(map_root));
   if ( (avail_maps = vvl_map_add(&map_root)) == -1) return 1;
   vvx_draw_main_menu(&master, &map_root);
-
+  
+  /* Main Loop: */
   for (loop = 1; loop;) {
     switch (main_event(&event, &selected_map)){
 
-      case -1: loop = 0; break;
+      case -1:
+        loop = 0;
+        break;
 
       case 2: {
         if (selected_map > avail_maps-1) selected_map = 1;
         else if (selected_map < 1) selected_map = avail_maps-1;
+
         vvx_update_main_menu(&master, &map_root, selected_map);
         break;
       }
