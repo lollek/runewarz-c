@@ -112,29 +112,47 @@ void vvx_draw_text(Master* master, const char text[], int x, int y, int is_c, in
   SDL_Surface *text_surface = NULL;
   SDL_Rect text_rect;
 
-  if (clr == 1) /* Blue */ {
-    text_color.b = 255;
-  } else if (clr == 2) /* Green */ {
-    text_color.g = 255;
-  } else if (clr == 3) /* Orange*/ {
-    text_color.r = 255;
-    text_color.g = 127;
-  } else if (clr == 4) /* Pink */ {
-    text_color.r = 255;
-    text_color.g = 192;
-    text_color.b = 203;
-  } else if (clr == 5) /* Grey */ {
-    text_color.r = 128;
-    text_color.g = 128;
-    text_color.b = 128;
-  } else if (clr == 6) /* Red */ {
-    text_color.r = 255;
-  } else if (clr == 7) /* Olive */ {
-    text_color.r = 128;
-    text_color.g = 128;
-  } else if (clr == 8) /* Cyan */ {
-    text_color.g = 255;
-    text_color.b = 255;
+  switch(clr) {
+    case 1: /* Blue */
+      text_color.b = 255;
+      break;
+      
+    case 2: /* Green */
+      text_color.g = 255;
+      break;
+
+    case 3: /* Orange */
+      text_color.r = 255;
+      text_color.g = 127;
+      break;
+
+    case 4: /* Pink */
+      text_color.r = 255;
+      text_color.g = 192;
+      text_color.b = 203;
+      break;
+
+    case 5: /* Grey */
+      text_color.r = 128;
+      text_color.g = 128;
+      text_color.b = 128;
+      break;
+
+    case 6: /* Red */
+      text_color.r = 255;
+      break;
+
+    case 7: /* Olive */
+      text_color.r = 128;
+      text_color.g = 128;
+      break;
+
+    case 8: /* Cyan */
+      text_color.g = 255;
+      text_color.b = 255;
+      break;
+
+    default:break;
   }
     
   text_surface = TTF_RenderText_Shaded(master->font, text, text_color, bg_color);
@@ -178,7 +196,7 @@ void vvx_draw_all_caps(Master* master) {
 
   unsigned short scoreboard_x = master->map_offset_x;
   unsigned short cap_counter = 0;
-  char cap_counter_str[4];
+  char cap_counter_str[5];
 
   SDL_Rect source, target;
   source.w = TILESIZE; source.h = TILESIZE;
@@ -226,7 +244,7 @@ void vvx_draw_all_caps(Master* master) {
       cap_list_ptr = cap_list_ptr->next;
     }
 
-    sprintf(cap_counter_str, "%d", cap_counter);
+    sprintf(cap_counter_str, " %d", cap_counter);
     vvx_draw_text(master, cap_counter_str, scoreboard_x, target.y, 0, player_ptr->color);
 
     scoreboard_x = master->map_offset_x;
@@ -240,7 +258,7 @@ void vvx_draw_capture(Master* master) {
 
   unsigned short scoreboard_x = master->map_offset_x;
   unsigned short cap_counter = 0;
-  char cap_counter_str[4];
+  char cap_counter_str[5];
 
   SDL_Rect source, target;
   source.x = master->current_player->color*TILESIZE;
@@ -269,7 +287,7 @@ void vvx_draw_capture(Master* master) {
   }
 
 
-  sprintf(cap_counter_str, "%d", cap_counter);
+  sprintf(cap_counter_str, " %d", cap_counter);
   vvx_draw_text(master, cap_counter_str, scoreboard_x, target.y, 0,
                 master->current_player->color);
 

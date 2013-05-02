@@ -1,10 +1,12 @@
 CC = cc
-CFLAGS= -lSDL -lSDL_ttf -lSDL_image -Wall -Wextra -ansi -pedantic
+SDLFLAG = -lSDL -lSDL_ttf -lSDL_image
+DEBUG = $(SDLFLAG) -Wall -Wextra -ansi -pedantic -g
+CFLAGS = $(SDLFLAG) -O3
 SOURCE = src/main.c src/vvl_link.c src/vvx_graphics.c src/vvg_game.c 
 EXE = -o runewarz
 
 all:	$(SOURCE)
-	$(CC) $(SOURCE) $(CFLAGS) $(EXE)
+	$(CC) $(SOURCE) $(DEBUG) $(EXE)
 
-debug:	$(SOURCE)
-	$(CC) $(SOURCE) $(CFLAGS) -g $(EXE)
+final:	$(SOURCE)
+	$(CC) $(SOURCE) $(CFLAGS) $(EXE)

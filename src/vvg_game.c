@@ -3,15 +3,21 @@
 /* Create a map from file */
 int vvg_make_map(Master* master, const char* mapname) {
 
-  FILE *fd = NULL;
   const char *prepath = "maps/";
-  char *fullpath = (char *)malloc(strlen(mapname) + strlen(prepath) + 1);
-  char x = 0, y = 0;
+  char x, y, *fullpath;
+  FILE *fd;
   int p;
 
+  master->instances = 0;
+  master->players = 0;
+  master->map_width = 0;
+  master->map_height = 0;
+
   /* Open mapfile: */
+  fullpath = (char *)malloc(strlen(mapname) + strlen(prepath) + 1);
   strcpy(fullpath, prepath);
   strcat(fullpath, mapname);
+
   fd = fopen(fullpath, "r");
   if (fd == NULL) {
     fprintf(stderr, "Failed to open file: %s\n", fullpath);
@@ -19,11 +25,6 @@ int vvg_make_map(Master* master, const char* mapname) {
     return 1;
   }
   
-  master->instances = 0;
-  master->players = 0;
-  master->map_width = 0;
-  master->map_height = 0;
-
   /* Start srand for randomizer */
   srand(time(0));
 
@@ -33,38 +34,43 @@ int vvg_make_map(Master* master, const char* mapname) {
   /* Create a node to server as root for all players: */
   if (vvl_player_init(&master->player_root) == 1) return 1;
   
-  /* Iterate through the map:
-     # becomes a Cap (game tile) and goes into a cap_root linked list
-     @ becomes a player and goes into player_root linked list */
-
-  while ((p = fgetc(fd)) != EOF) {
-    if (p == '\n') {
-      y++;
-      x = -1;
+  /** Iterate through the map:
+   * # becomes a Cap (game tile) and goes into a cap_root linked list
+   * @ becomes a player and goes into player_root linked list
+   */
+  for (p = fgetc(fd), x = y = 0; p != EOF; p = fgetc(fd), x++) {
+    switch(p) {
+      case '\n':
+        y++;
+        x = -1;
+        break;
       
-    } else if (p == '#') {
-      master->instances++;
-      vvl_cap_add(&master->cap_root, x, y, rand() % 6 + 1);
+      case '#':
+        master->instances++;
+        vvl_cap_add(&master->cap_root, x, y, rand() % 6 + 1);
 
-      if (x > master->map_width) master->map_width = x;
-      if (y > master->map_height) master->map_height = y;
+        if (x > master->map_width) master->map_width = x;
+        if (y > master->map_height) master->map_height = y;
+        break;
       
-    } else if (p == '@') {
-      master->instances++;
-      vvl_player_add(&master->player_root, ++master->players, x, y);
+      case '@':
+        master->instances++;
+        vvl_player_add(&master->player_root, ++master->players, x, y);
+        
+        if (x > master->map_width) master->map_width = x;
+        if (y > master->map_height) master->map_height = y;
+        break;
 
-      if (x > master->map_width) master->map_width = x;
-      if (y > master->map_height) master->map_height = y;
+      default: break;
     }
-    x++;
   }
 
   fclose(fd);
   free(fullpath);
 
   if (master->map_width >= 50 || master->map_height >= 30) {
-    fprintf(stderr, "Map is too big! \n\
-Please don't make it wider than 50 runes in a row or higher than 30\n");
+    fprintf(stderr, "Map is too big!\n"
+            "Please don't make it wider than 50 runes in a row or higher than 30\n");
     return 2;
   } else if (master->players > 4) {
     fprintf(stderr, "More than 4 players is not allowed on a map\n");
@@ -126,7 +132,9 @@ int vvg_play_game(Master* master) {
     
     /* If everyone is stuck: */
     if (stuck_players == master->players) {
-      printf("Game over! Press escape to close game\n");
+      vvx_draw_text(master, "Game over! Press escape to return to menu",
+                    master->stdscr->w/2, SCREEN_HEIGHT-45, 1, 3);
+      SDL_Flip(master->stdscr);
       for (;;)
         while (SDL_WaitEvent(&event))
           if (event.type == SDL_KEYDOWN)
@@ -366,7 +374,7 @@ int vvg_capture_hovercaps(Player** player) {
 
   vvl_cap_move_all(&(*player)->hover_list, &(*player)->cap_list);
   (*player)->color = (*player)->hover_color;
-  (*player)->hover_color = 0;
+  /* (*player)->hover_color = 0; */
 
   return 0;
 }
