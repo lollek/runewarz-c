@@ -93,7 +93,7 @@ void vvg_free_map(Master* master) {
 
 int vvg_play_game(Master* master) {
 
-  char status = 0;
+  signed char status = 0;
   unsigned char stuck_players;
   SDL_Event event;
 
