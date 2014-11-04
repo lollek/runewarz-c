@@ -1,12 +1,22 @@
 CC = cc
-SDLFLAG = -lSDL -lSDL_ttf -lSDL_image
-DEBUG = $(SDLFLAG) -Wall -Wextra -ansi -pedantic -g
-CFLAGS = $(SDLFLAG) -O3
-SOURCE = src/main.c src/vvl_link.c src/vvx_graphics.c src/vvg_game.c 
-EXE = -o runewarz
+CFLAGS = -Wall -Wextra -ansi -pedantic -std=c99 -O3
+LDFLAGS = -lSDL -lSDL_ttf -lSDL_image
 
-all:	$(SOURCE)
-	$(CC) $(SOURCE) $(DEBUG) $(EXE)
+SRC = $(wildcard src/*.c)
+OBJS = $(addsuffix .o, $(basename $(SRC)))
+CTARGET = runewarz
 
-final:	$(SOURCE)
-	$(CC) $(SOURCE) $(CFLAGS) $(EXE)
+EMCC = emcc
+EMTARGET = output/index.html
+EMFLAGS = -Wall -Wextra -Werror -std=c99 --preload-file img/ -g
+
+$(CTARGET):	$(OBJS)
+	$(CC) $^ $(LDFLAGS) -o $(CTARGET)
+
+emscripten:	$(SRC)
+	$(EMCC) $^ $(EMFLAGS) -o $(EMTARGET)
+
+clean:
+	$(RM) $(OBJS) $(CTARGET)
+
+.PHONY: clean
