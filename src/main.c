@@ -48,7 +48,8 @@ int main(void) {
 
   char status;
   char selected_map = 0;
-  char loop, avail_maps;
+  char loop;
+  signed char avail_maps;
 
   /** Init
    * Create master instance for holding surfaces and linked-list roots
