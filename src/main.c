@@ -1,11 +1,3 @@
-
-/** Rune Warz
- * Created 2013-04-08 by Olle K
- * Image(s) by Sofie Aid
- *
- * Made as a port from python to C
- */
-
 #include <stdio.h>
 
 #include "SDL/SDL.h"
@@ -41,66 +33,63 @@ int main_event(SDL_Event* event, char* selected_map) {
 
 int main(void) {
 
-  Master master;
-  Map map_root, *map_p;
-
-  SDL_Event event;
-
-  char status;
-  char selected_map = 0;
-  char loop;
-  signed char avail_maps;
-
   /** Init
    * Create master instance for holding surfaces and linked-list roots
    * Init graphics
    * Create a list of found maps under maps/-folder
    * Draw main menu
   */
+
+  Master master;
   memset(&master, 0, sizeof(master));
-  if (vvx_init(&master) == 1) return 1;
+  if (vvx_init(&master) == 1)
+    return 1;
+
+  Map map_root;
+  signed char avail_maps;
   memset(&map_root, 0, sizeof(map_root));
-  if ( (avail_maps = vvl_map_add(&map_root)) == -1) return 1;
+  if ( (avail_maps = vvl_map_add(&map_root)) == -1)
+    return 1;
   vvx_draw_main_menu(&master, &map_root);
-  
-  /** Main Loop
-   * ESC:    -1 / exit
-   * UP/DOWN: 2 / change selected map
-   * ENTER:   3 / play
-   */
-  for (loop = 1; loop;) {
+
+  char selected_map = 0;
+  for (;;) {
+    SDL_Event event;
     switch (main_event(&event, &selected_map)) {
 
-      case -1: {
-        loop = 0;
-      } break;
+      case -1: /* Exit */
+        vvl_map_remove(&map_root);
+        vvx_exit(&master);
+        exit(0);
 
-      case 2: { 
+      case 2: /* Change selected map */
         wrap_around(avail_maps, &selected_map);
         vvx_update_main_menu(&master, &map_root, selected_map);
-      } break;
+        break;
 
-      case 3: { 
+      case 3: /* Play */
         if (selected_map >= 1 && selected_map <= avail_maps) {
+          Map *map_p;
           for (map_p = map_root.next; map_p != NULL && selected_map--> 1; map_p = map_p->next);
           if (map_p != NULL) {
-            status = vvg_make_map(&master, map_p->name);
-            if (status  == 1) return 1;
-            if (status != 0) break;
+            char status = vvg_make_map(&master, map_p->name);
+            if (status  == 1)
+              return 1;
+            if (status != 0)
+              break;
 
             vvg_play_game(&master);
             vvg_free_map(&master);
             selected_map = 0;
             vvx_draw_main_menu(&master, &map_root);
           }
-        } break;
-      }
+        }
+        break;
 
       default: break;
     }
   }
 
-  vvl_map_remove(&map_root);
-  vvx_exit(&master);
-  return 0;
+  /* END NOT REACHED */
+  return 1;
 }
