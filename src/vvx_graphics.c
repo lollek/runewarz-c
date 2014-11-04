@@ -1,51 +1,5 @@
 #include "vvx_graphics.h"
 
-int vvx_init(Master* master) {
-
-  if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
-    fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
-    return 1;
-  }
-
-  if (TTF_Init() == -1) {
-    fprintf(stderr, "Failed to initialize TTF: %s\n", TTF_GetError());
-    return 1;
-  }
-
-  master->stdscr = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_BPP, SDL_SWSURFACE);
-  if (master->stdscr == NULL) {
-    fprintf(stderr, "Failed to create main SDL surface: %s\n", SDL_GetError());
-    return 1;
-  }
-
-  SDL_Surface *imgscr_temp;
-  if ((imgscr_temp = IMG_Load("img/tiles.png")) == NULL) {
-    fprintf(stderr, "Failed to load tiles for SDL: %s\n", SDL_GetError());
-    return 1;
-  }
-
-#ifndef __EMSCRIPTEN__
-  if ((master->imgscr = SDL_DisplayFormat(imgscr_temp)) == NULL) {
-    fprintf(stderr, "Failed to format tiles for SDL: %s\n", SDL_GetError());
-    return 1;
-  }
-  SDL_FreeSurface(imgscr_temp);
-#else
-  master->imgscr = imgscr_temp;
-#endif
-
-  if ((master->font = TTF_OpenFont("img/freemonobold.ttf", TILESIZE)) == NULL) {
-    fprintf(stderr, "Failed to load TTF font: %s\n", TTF_GetError());
-    return 1;
-  }
-
-
-  SDL_WM_SetCaption(CAPTION, CAPTION);
-
-  return 0;
-
-}
-
 void vvx_exit(Master* master) {
 
   TTF_CloseFont(master->font);
