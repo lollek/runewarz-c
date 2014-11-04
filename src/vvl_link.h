@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "SDL/SDL.h"
 #include "SDL/SDL_ttf.h"
