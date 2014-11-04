@@ -1,5 +1,5 @@
 CC = cc
-CFLAGS = -Wall -Wextra -ansi -pedantic -std=c99 -O3
+CFLAGS = -Wall -Wextra -Werror -ansi -pedantic -std=c99 -O3
 LDFLAGS = -lSDL -lSDL_ttf -lSDL_image
 
 SRC = $(wildcard src/*.c)
