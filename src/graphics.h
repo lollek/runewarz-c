@@ -37,13 +37,25 @@ void graphics_exit();
 int graphics_paint_screen_black();
 
 /**
- * Print the caption to the top of the screen as a title
+ * Print the given text centered on the screen
+ *
+ * Parameters:
+ *  text: Text to print
+ *  height: position of the text
  *
  * Returns:
  *  0 on success
  *  1 on error
  */
-int graphics_print_caption();
+int graphics_print_text(const char *text, int height);
 
+/**
+ * Show all updates done to the screen
+ *
+ * Returns:
+ *  0 on success
+ *  1 on error
+ */
+int graphics_draw_updates();
 
 #endif /* RUNEWARZ_GRAPHICS_H */

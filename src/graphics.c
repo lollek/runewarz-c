@@ -109,21 +109,26 @@ graphics_paint_screen_black()
     return SDL_FillRect(stdscr, NULL, SDL_MapRGB(stdscr->format, 0, 0, 0)) != 0;
   }
 
-int
-graphics_print_caption()
+int graphics_print_text(const char *text, int height)
   {
     SDL_Color color = { 255, 127, 0, 0 };  /* Orange */
     SDL_Color background = { 0, 0, 0, 0 }; /* Black  */
 
-    SDL_Surface *temp_surface = _make_text(CAPTION, &color, &background);
+    SDL_Surface *temp_surface = _make_text(text, &color, &background);
     if (temp_surface == NULL)
       {
         return 1;
       }
 
-    SDL_Rect rect = { stdscr->w/2 - temp_surface->w/2, 30, 0, 0 };
+    SDL_Rect rect = { stdscr->w/2 - temp_surface->w/2, height, 0, 0 };
     int status = _blit(temp_surface, NULL, stdscr, &rect);
     SDL_FreeSurface(temp_surface);
 
     return status;
+  }
+
+int
+graphics_draw_updates()
+  {
+    return SDL_Flip(stdscr) != 0;
   }
