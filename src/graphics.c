@@ -1,10 +1,42 @@
 #include "graphics.h"
 
+#include <stdio.h>
+
+#include "SDL/SDL.h"
+#include "SDL/SDL_ttf.h"
+#include "SDL/SDL_image.h"
+
 static SDL_Surface *stdscr = NULL;
 static SDL_Surface *imgscr = NULL;
 static TTF_Font *stdfont = NULL;
 
-int graphics_init()
+static SDL_Surface *
+_make_text(const char *text, SDL_Color *color, SDL_Color *background)
+  {
+    SDL_Surface *temp_surface =
+      TTF_RenderText_Shaded(stdfont, text, *color, *background);
+
+    if (temp_surface == NULL)
+      {
+        fprintf(stderr, "TTF_RenderText_Shaded failed: %s\n", TTF_GetError());
+      }
+
+    return temp_surface;
+  }
+
+static int
+_blit(SDL_Surface *s_from, SDL_Rect *r_from, SDL_Surface *s_to, SDL_Rect *r_to)
+  {
+    if (SDL_BlitSurface(s_from, r_from, s_to, r_to) != 0)
+      {
+        fprintf(stderr, "SDL_BlitSurface failed: %s\n", SDL_GetError());
+        return 1;
+      }
+    return 0;
+  }
+
+int
+graphics_init()
   {
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
       {
@@ -58,7 +90,8 @@ int graphics_init()
     return 0;
   }
 
-void graphics_exit()
+void
+graphics_exit()
   {
     TTF_CloseFont(stdfont);
     stdfont = NULL;
@@ -68,4 +101,29 @@ void graphics_exit()
     imgscr = NULL;
     SDL_Quit();
     stdscr = NULL;
+  }
+
+int
+graphics_paint_screen_black()
+  {
+    return SDL_FillRect(stdscr, NULL, SDL_MapRGB(stdscr->format, 0, 0, 0)) != 0;
+  }
+
+int
+graphics_print_caption()
+  {
+    SDL_Color color = { 255, 127, 0, 0 };  /* Orange */
+    SDL_Color background = { 0, 0, 0, 0 }; /* Black  */
+
+    SDL_Surface *temp_surface = _make_text(CAPTION, &color, &background);
+    if (temp_surface == NULL)
+      {
+        return 1;
+      }
+
+    SDL_Rect rect = { stdscr->w/2 - temp_surface->w/2, 30, 0, 0 };
+    int status = _blit(temp_surface, NULL, stdscr, &rect);
+    SDL_FreeSurface(temp_surface);
+
+    return status;
   }

@@ -1,12 +1,6 @@
 #ifndef RUNEWARZ_GRAPHICS_H
 #define RUNEWARZ_GRAPHICS_H
 
-#include <stdio.h>
-
-#include "SDL/SDL.h"
-#include "SDL/SDL_ttf.h"
-#include "SDL/SDL_image.h"
-
 #define TILES_PATH "img/tiles.png"
 #define FONT_PATH "img/freemonobold.ttf"
 
@@ -32,5 +26,24 @@ int graphics_init();
  * Stop SDL and its subsystems. Also free all allocated resources
  */
 void graphics_exit();
+
+/**
+ * Paint the whole screen black
+ *
+ * Returns:
+ *  0 on success
+ *  1 on error
+ */
+int graphics_paint_screen_black();
+
+/**
+ * Print the caption to the top of the screen as a title
+ *
+ * Returns:
+ *  0 on success
+ *  1 on error
+ */
+int graphics_print_caption();
+
 
 #endif /* RUNEWARZ_GRAPHICS_H */
