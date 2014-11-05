@@ -8,7 +8,7 @@ CTARGET = runewarz
 
 EMCC = emcc
 EMTARGET = output/index.html
-EMFLAGS = -Wall -Wextra -Werror -std=c99 --preload-file img/ -g
+EMFLAGS = -Wall -Wextra -Werror -std=c99 --preload-file img/ --preload-file maps/ -g
 
 $(CTARGET):	$(OBJS)
 	$(CC) $^ $(LDFLAGS) -o $(CTARGET)
