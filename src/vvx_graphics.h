@@ -17,8 +17,6 @@
 
 #define CAPTION "RuneWarz v0.2.1"
 
-void vvx_exit(Master* master);
-
 void vvx_draw_main_menu(Master* master, Map* map_root);
 void vvx_update_main_menu(Master* master, Map* map_root, char highmap);
 void vvx_draw_text(Master* master, const char text[], int x, int y, int is_c, int clr);

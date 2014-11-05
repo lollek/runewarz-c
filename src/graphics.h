@@ -18,8 +18,19 @@
 
 #define CAPTION "RuneWarz v0.2.1"
 
-/* Start up SDL and its subsystems, then load all images from disk
- * Returns 0 on success and automatically prints the error */
-int init_graphics();
+/**
+ * Start up SDL and its subsystems, then load all needed images from disk.
+ * If any errors occur, they will be printed to stderr.
+ *
+ * Returns:
+ *  0 on success or non-fatal error
+ *  1 on fatal error
+ */
+int graphics_init();
+
+/**
+ * Stop SDL and its subsystems. Also free all allocated resources
+ */
+void graphics_exit();
 
 #endif /* RUNEWARZ_GRAPHICS_H */

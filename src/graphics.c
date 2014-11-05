@@ -4,7 +4,7 @@ static SDL_Surface *stdscr = NULL;
 static SDL_Surface *imgscr = NULL;
 static TTF_Font *stdfont = NULL;
 
-int init_graphics()
+int graphics_init()
   {
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
       {
@@ -56,4 +56,16 @@ int init_graphics()
     SDL_WM_SetCaption(CAPTION, CAPTION);
 
     return 0;
+  }
+
+void graphics_exit()
+  {
+    TTF_CloseFont(stdfont);
+    stdfont = NULL;
+    TTF_Quit();
+
+    SDL_FreeSurface(imgscr);
+    imgscr = NULL;
+    SDL_Quit();
+    stdscr = NULL;
   }
