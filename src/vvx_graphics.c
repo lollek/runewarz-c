@@ -111,28 +111,6 @@ void vvx_draw_text(Master* master, const char text[], int x, int y, int is_c, in
   
 }
 
-/* Keeping this here in case I forget:
-   
-void vvk_render_box_centered(SDL_Surface** target_surface,
-                             int offset_x, int offset_y, int width, int height) {
-
-  SDL_Surface *temp_surf = NULL;
-  SDL_Rect temp_rect;
-
-  temp_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, 32, 0, 0, 0, 0);
-  temp_rect.x = 1; temp_rect.w = temp_surf->w-2;
-  temp_rect.y = 1; temp_rect.h = temp_surf->h-2;
-  SDL_FillRect(temp_surf, &temp_rect, SDL_MapRGB(temp_surf->format, 100, 100, 100));
-  temp_rect.w = 0; temp_rect.h = 0;
-
-  temp_rect.x = (*target_surface)->w/2 - temp_surf->w/2 + offset_x;
-  temp_rect.y = (*target_surface)->h/2 - temp_surf->h/2 + offset_y;
-  SDL_BlitSurface(temp_surf, NULL, *target_surface, &temp_rect);
-
-  SDL_FreeSurface(temp_surf);
-}
-*/
-
 void vvx_draw_all_caps(Master* master) {
 
   Cap *cap_ptr = master->cap_root->next;
